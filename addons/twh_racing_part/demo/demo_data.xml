@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <!-- Demo Customers -->
+    <record id="partner_toko_jaya" model="res.partner">
+        <field name="name">Toko Jaya Motor</field>
+        <field name="is_company">True</field>
+        <field name="is_twh_customer">True</field>
+        <field name="twh_customer_code">TKO001</field>
+        <field name="twh_customer_type">retail</field>
+        <field name="twh_discount_percent">3.0</field>
+        <field name="street">Jl. Sudirman No. 123</field>
+        <field name="city">Jakarta</field>
+        <field name="phone">021-12345678</field>
+        <field name="email">info@tokojayamotor.com</field>
+    </record>
+
+    <record id="partner_toko_makmur" model="res.partner">
+        <field name="name">Toko Makmur Racing</field>
+        <field name="is_company">True</field>
+        <field name="is_twh_customer">True</field>
+        <field name="twh_customer_code">TKO002</field>
+        <field name="twh_customer_type">workshop</field>
+        <field name="twh_discount_percent">0.0</field>
+        <field name="street">Jl. Gatot Subroto No. 456</field>
+        <field name="city">Bekasi</field>
+        <field name="phone">021-87654321</field>
+        <field name="email">order@makmurracing.com</field>
+    </record>
+
+    <record id="partner_dealer_sentosa" model="res.partner">
+        <field name="name">Dealer Sentosa Motor</field>
+        <field name="is_company">True</field>
+        <field name="is_twh_customer">True</field>
+        <field name="twh_customer_code">DLR001</field>
+        <field name="twh_customer_type">dealer</field>
+        <field name="twh_discount_percent">0.0</field>
+        <field name="street">Jl. MT Haryono No. 789</field>
+        <field name="city">Tangerang</field>
+        <field name="phone">021-55556666</field>
+        <field name="email">cs@sentsosamotor.com</field>
+    </record>
+
+    <!-- Demo Sales Users -->
+    <record id="user_sales_andi" model="res.users">
+        <field name="name">Andi Wijaya (Sales)</field>
+        <field name="login">sales.andi</field>
+        <field name="password">sales123</field>
+        <field name="groups_id" eval="[(4, ref('twh_racing_part.group_twh_sales'))]"/>
+    </record>
+
+    <record id="user_sales_budi" model="res.users">
+        <field name="name">Budi Santoso (Sales)</field>
+        <field name="login">sales.budi</field>
+        <field name="password">sales123</field>
+        <field name="groups_id" eval="[(4, ref('twh_racing_part.group_twh_sales'))]"/>
+    </record>
+
+    <!-- Demo Invoice 1 -->
+    <record id="demo_invoice_1" model="twh.invoice">
+        <field name="name">TWH/INV/2025/00001</field>
+        <field name="partner_id" ref="partner_toko_jaya"/>
+        <field name="sales_person_id" ref="user_sales_andi"/>
+        <field name="date_invoice" eval="(DateTime.now() - timedelta(days=30)).strftime('%Y-%m-%d')"/>
+        <field name="price_tier">price_a</field>
+        <field name="discount_percent">3.0</field>
+        <field name="payment_term_days">60</field>
+        <field name="state">confirmed</field>
+    </record>
+
+    <!-- Invoice Lines for Invoice 1 -->
+    <record id="demo_invoice_1_line_1" model="twh.invoice.line">
+        <field name="invoice_id" ref="demo_invoice_1"/>
+        <field name="product_id" ref="product_gear_klx"/>
+        <field name="description">Gear Ratio Set KLX 12/32+16/30+20/28+20/23+24/24T</field>
+        <field name="quantity">2</field>
+        <field name="price_unit">1825000</field>
+    </record>
+
+    <record id="demo_invoice_1_line_2" model="twh.invoice.line">
+        <field name="invoice_id" ref="demo_invoice_1"/>
+        <field name="product_id" ref="product_roller_nmax"/>
+        <field name="description">Blue Roller NMAX/AEROX/M3 7g-13g 20x12</field>
+        <field name="quantity">10</field>
+        <field name="price_unit">70000</field>
+    </record>
+
+    <!-- Demo Invoice 2 -->
+    <record id="demo_invoice_2" model="twh.invoice">
+        <field name="name">TWH/INV/2025/00002</field>
+        <field name="partner_id" ref="partner_toko_makmur"/>
+        <field name="sales_person_id" ref="user_sales_budi"/>
+        <field name="date_invoice" eval="(DateTime.now() - timedelta(days=15)).strftime('%Y-%m-%d')"/>
+        <field name="price_tier">price_b</field>
+        <field name="discount_percent">0.0</field>
+        <field name="payment_term_days">60</field>
+        <field name="state">confirmed</field>
+    </record>
+
+    <!-- Invoice Lines for Invoice 2 -->
+    <record id="demo_invoice_2_line_1" model="twh.invoice.line">
+        <field name="invoice_id" ref="demo_invoice_2"/>
+        <field name="product_id" ref="product_crankshaft_rxking_50"/>
+        <field name="description">Forged Crankshaft RX KING 50mm (std)</field>
+        <field name="quantity">3</field>
+        <field name="price_unit">1525000</field>
+    </record>
+
+    <record id="demo_invoice_2_line_2" model="twh.invoice.line">
+        <field name="invoice_id" ref="demo_invoice_2"/>
+        <field name="product_id" ref="product_cylinder_crf_63"/>
+        <field name="description">Cylinder Block Bore Up CRF 63mm</field>
+        <field name="quantity">5</field>
+        <field name="price_unit">715000</field>
+    </record>
+
+    <!-- Demo Invoice 3 (Recent) -->
+    <record id="demo_invoice_3" model="twh.invoice">
+        <field name="name">TWH/INV/2025/00003</field>
+        <field name="partner_id" ref="partner_dealer_sentosa"/>
+        <field name="sales_person_id" ref="user_sales_andi"/>
+        <field name="date_invoice" eval="(DateTime.now() - timedelta(days=5)).strftime('%Y-%m-%d')"/>
+        <field name="price_tier">dealer</field>
+        <field name="discount_percent">0.0</field>
+        <field name="payment_term_days">60</field>
+        <field name="state">confirmed</field>
+    </record>
+
+    <!-- Invoice Lines for Invoice 3 -->
+    <record id="demo_invoice_3_line_1" model="twh.invoice.line">
+        <field name="invoice_id" ref="demo_invoice_3"/>
+        <field name="product_id" ref="product_gear_rxking"/>
+        <field name="description">Gear Ratio RX KING 13/32+17/29+19/25+22/24+23/22</field>
+        <field name="quantity">5</field>
+        <field name="price_unit">1700000</field>
+    </record>
+
+    <record id="demo_invoice_3_line_2" model="twh.invoice.line">
+        <field name="invoice_id" ref="demo_invoice_3"/>
+        <field name="product_id" ref="product_roller_nmax"/>
+        <field name="description">Blue Roller NMAX/AEROX/M3 7g-13g 20x12</field>
+        <field name="quantity">20</field>
+        <field name="price_unit">68000</field>
+    </record>
+
+</odoo>

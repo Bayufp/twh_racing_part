@@ -1,0 +1,6 @@
+<odoo>
+    <record id="action_twh_dashboard" model="ir.actions.client">
+        <field name="name">TWH Dashboard</field>
+        <field name="tag">twh_dashboard</field>
+    </record>
+</odoo>

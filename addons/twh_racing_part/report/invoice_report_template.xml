@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Invoice Report Template -->
+   <template id="report_twh_invoice_document">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <!-- Header -->
+                        <div class="row">
+                            <div class="col-6">
+                                <h2>INVOICE</h2>
+                            </div>
+                            <div class="col-6 text-end">
+                                <h3><span t-field="o.name"/></h3>
+                                <p>
+                                    <strong>Date:</strong> <span t-field="o.date_invoice"/><br/>
+                                    <strong>Due Date:</strong> <span t-field="o.date_due"/><br/>
+                                    <strong>Sales:</strong> <span t-field="o.sales_person_id.name"/>
+                                </p>
+                            </div>
+                        </div>
+
+                        <hr/>
+
+                        <!-- Customer Info -->
+                        <div class="row mt-4">
+                            <div class="col-6">
+                                <strong>Bill To:</strong><br/>
+                                <span t-field="o.partner_id.name"/><br/>
+                                <span t-field="o.partner_id.street"/><br/>
+                                <span t-field="o.partner_id.city"/><br/>
+                                Phone: <span t-field="o.partner_id.phone"/>
+                            </div>
+                            <div class="col-6 text-end">
+                                <p>
+                                    <strong>Price Tier:</strong> 
+                                    <t t-if="o.price_tier == 'price_a'">Harga A</t>
+                                    <t t-elif="o.price_tier == 'price_b'">Harga B</t>
+                                    <t t-elif="o.price_tier == 'dealer'">Dealer</t>
+                                    <t t-else=""><span t-field="o.price_tier"/></t>
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Invoice Lines - UPDATED SECTION -->
+                        <table class="table table-sm mt-4">
+                            <thead>
+                                <tr style="background-color: #e9ecef;">
+                                    <th style="width: 5%;">No</th>
+                                    <th style="width: 45%;">Product Description</th>
+                                    <th class="text-center" style="width: 10%;">Qty</th>
+                                    <th class="text-end" style="width: 15%;">Unit Price</th>
+                                    <th class="text-end" style="width: 15%;">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-set="line_num" t-value="0"/>
+                                <tr t-foreach="o.invoice_line_ids" t-as="line">
+                                    <t t-set="line_num" t-value="line_num + 1"/>
+                                    <td><span t-esc="line_num"/></td>
+                                    <td>
+                                        <!-- CRITICAL: Tampilkan description jika ada, kalau tidak tampilkan product name -->
+                                        <t t-if="line.description and line.description.strip() != '' and line.description != line.product_id.name">
+                                            <strong><span t-esc="line.description"/></strong>
+                                        </t>
+                                        <t t-else="">
+                                            <strong><span t-field="line.product_id.name"/></strong>
+                                        </t>
+                                        <!-- Product code (opsional) -->
+                                        <div style="font-size: 9pt; color: #666;">
+                                            Code: <span t-field="line.product_id.default_code"/>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span t-field="line.quantity"/>
+                                    </td>
+                                    <td class="text-end">
+                                        <span t-field="line.price_unit" 
+                                              t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                    </td>
+                                    <td class="text-end">
+                                        <span t-field="line.subtotal" 
+                                              t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <!-- Totals -->
+                        <div class="row">
+                            <div class="col-7"></div>
+                            <div class="col-5">
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td><strong>Subtotal:</strong></td>
+                                        <td class="text-end">
+                                            <span t-field="o.subtotal" 
+                                                  t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                        </td>
+                                    </tr>
+                                    <tr t-if="o.discount_percent &gt; 0">
+                                        <td><strong>Discount (<span t-field="o.discount_percent"/>%):</strong></td>
+                                        <td class="text-end">
+                                            <span t-field="o.discount_amount" 
+                                                  t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                        </td>
+                                    </tr>
+                                    <tr style="border-top: 2px solid black;">
+                                        <td><strong>TOTAL:</strong></td>
+                                        <td class="text-end">
+                                            <strong>
+                                                <span t-field="o.total" 
+                                                      t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                            </strong>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="row mt-4" t-if="o.notes">
+                            <div class="col-12">
+                                <strong>Notes:</strong><br/>
+                                <span t-field="o.notes"/>
+                            </div>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="row mt-5">
+                            <div class="col-12 text-center">
+                                <p style="font-size: 10pt;">
+                                    Thank you for your business!<br/>
+                                    Payment terms: <span t-field="o.payment_term_days"/> days from invoice date
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+</odoo>

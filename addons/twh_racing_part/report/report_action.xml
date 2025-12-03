@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Invoice Report Action -->
+    <record id="action_report_twh_invoice" model="ir.actions.report">
+        <field name="name">TWH Invoice</field>
+        <field name="model">twh.invoice</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">twh_racing_part.report_twh_invoice_document</field>
+        <field name="report_file">twh_racing_part.report_twh_invoice_document</field>
+        <field name="print_report_name">'INV-%s' % (object.name)</field>
+        <field name="binding_model_id" ref="model_twh_invoice"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- Sales Commission Report Action -->
+    <record id="action_report_sales_commission" model="ir.actions.report">
+        <field name="name">Sales Commission Report</field>
+        <field name="model">twh.commission.report.wizard</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">twh_racing_part.report_sales_commission_document</field>
+        <field name="report_file">twh_racing_part.report_sales_commission_document</field>
+        <field name="print_report_name">'Commission-Report-%s' % (time.strftime('%Y%m%d'))</field>
+    </record>
+
+</odoo>

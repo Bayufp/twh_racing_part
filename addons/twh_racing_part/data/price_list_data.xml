@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <!-- Price Tiers -->
+    <record id="price_tier_bayu" model="twh.price.tier">
+        <field name="name">Harga Bayu</field>
+        <field name="code">bayu</field>
+        <field name="sequence">1</field>
+        <field name="description">Harga dasar/cost untuk perhitungan komisi sales</field>
+    </record>
+
+    <record id="price_tier_dealer" model="twh.price.tier">
+        <field name="name">Harga Dealer</field>
+        <field name="code">dealer</field>
+        <field name="sequence">2</field>
+        <field name="description">Harga khusus untuk dealer TWH</field>
+    </record>
+
+    <record id="price_tier_a" model="twh.price.tier">
+        <field name="name">Harga A</field>
+        <field name="code">price_a</field>
+        <field name="sequence">3</field>
+        <field name="description">Harga untuk toko rekanan kategori A</field>
+    </record>
+
+    <record id="price_tier_b" model="twh.price.tier">
+        <field name="name">Harga B</field>
+        <field name="code">price_b</field>
+        <field name="sequence">4</field>
+        <field name="description">Harga untuk toko rekanan kategori B</field>
+    </record>
+
+    <record id="price_tier_het" model="twh.price.tier">
+        <field name="name">HET (Harga Eceran Tertinggi)</field>
+        <field name="code">het</field>
+        <field name="sequence">5</field>
+        <field name="description">Harga eceran tertinggi untuk konsumen akhir</field>
+    </record>
+
+</odoo>

@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Sales Commission Report Template -->
+    <template id="report_sales_commission_document">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <!-- Header -->
+                        <div class="row">
+                            <div class="col-12 text-center">
+                                <h2>SALES COMMISSION REPORT</h2>
+                                <h4>TWH Racing Part</h4>
+                                <p>
+                                    Period: <span t-esc="o.date_from"/> to <span t-esc="o.date_to"/>
+                                    <t t-if="o.sales_person_id">
+                                        <br/>Sales Person: <span t-field="o.sales_person_id.name"/>
+                                    </t>
+                                </p>
+                            </div>
+                        </div>
+
+                        <hr/>
+
+                        <!-- Get commission data -->
+                        <t t-set="commission_obj" t-value="env['twh.sales.commission']"/>
+                        <t t-set="summary" t-value="commission_obj.get_commission_summary(
+                            o.sales_person_id.id if o.sales_person_id else None,
+                            o.date_from,
+                            o.date_to
+                        )"/>
+
+                        <!-- Summary Cards -->
+                        <div class="row mt-4 mb-4">
+                            <div class="col-3">
+                                <div class="card">
+                                    <div class="card-body text-center">
+                                        <h5>Total Commission</h5>
+                                        <h3 style="color: #28a745;">
+                                            Rp <t t-esc="'{:,.0f}'.format(summary['total_commission'])"/>
+                                        </h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="card">
+                                    <div class="card-body text-center">
+                                        <h5>Total Invoices</h5>
+                                        <h3><t t-esc="summary['total_invoices']"/></h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="card">
+                                    <div class="card-body text-center">
+                                        <h5>Total Quantity</h5>
+                                        <h3><t t-esc="'{:,.0f}'.format(summary['total_quantity'])"/></h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="card">
+                                    <div class="card-body text-center">
+                                        <h5>Avg Commission/Invoice</h5>
+                                        <h3>
+                                            <t t-if="summary['total_invoices'] &gt; 0">
+                                                Rp <t t-esc="'{:,.0f}'.format(summary['total_commission'] / summary['total_invoices'])"/>
+                                            </t>
+                                            <t t-else="">0</t>
+                                        </h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Commission Details -->
+                        <h4 class="mt-4">Commission Details</h4>
+                        <table class="table table-sm table-bordered">
+                            <thead style="background-color: #e9ecef;">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Invoice</th>
+                                    <th>Product</th>
+                                    <th class="text-end">Qty</th>
+                                    <th class="text-end">Cost Price</th>
+                                    <th class="text-end">Selling Price</th>
+                                    <th class="text-end">Margin</th>
+                                    <th class="text-end">Commission</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="summary['commissions']" t-as="comm">
+                                    <tr>
+                                        <td><span t-field="comm.date"/></td>
+                                        <td><span t-field="comm.invoice_name"/></td>
+                                        <td><span t-field="comm.product_id.name"/></td>
+                                        <td class="text-end">
+                                            <span t-field="comm.quantity"/>
+                                        </td>
+                                        <td class="text-end">
+                                            <span t-field="comm.cost_price" 
+                                                  t-options='{"widget": "monetary", "display_currency": comm.currency_id}'/>
+                                        </td>
+                                        <td class="text-end">
+                                            <span t-field="comm.selling_price" 
+                                                  t-options='{"widget": "monetary", "display_currency": comm.currency_id}'/>
+                                        </td>
+                                        <td class="text-end">
+                                            <span t-field="comm.margin" 
+                                                  t-options='{"widget": "monetary", "display_currency": comm.currency_id}'/>
+                                        </td>
+                                        <td class="text-end">
+                                            <strong>
+                                                <span t-field="comm.commission_amount" 
+                                                      t-options='{"widget": "monetary", "display_currency": comm.currency_id}'/>
+                                            </strong>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                            <tfoot style="background-color: #f8f9fa;">
+                                <tr>
+                                    <td colspan="7" class="text-end"><strong>TOTAL COMMISSION:</strong></td>
+                                    <td class="text-end">
+                                        <strong style="font-size: 12pt;">
+                                            Rp <t t-esc="'{:,.0f}'.format(summary['total_commission'])"/>
+                                        </strong>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+
+                        <!-- Footer -->
+                        <div class="row mt-5">
+                            <div class="col-6">
+                                <p>
+                                    Report Generated: <span t-esc="datetime.datetime.now().strftime('%d %B %Y %H:%M')"/>
+                                </p>
+                            </div>
+                            <div class="col-6 text-end">
+                                <p>
+                                    <strong>Authorized Signature</strong><br/>
+                                    <br/>
+                                    <br/>
+                                    _____________________
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+</odoo>

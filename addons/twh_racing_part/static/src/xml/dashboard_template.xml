@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="twh_racing_part.Dashboard">
+        <div class="twh_dashboard_container p-3">
+            <h1 class="mb-4">TWH Dashboard</h1>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <h5>Total Products</h5>
+                            <h2><t t-esc="state.total_products"/></h2>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <h5>Total Customers</h5>
+                            <h2><t t-esc="state.total_customers"/></h2>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body">
+                            <h5>Pending Invoices</h5>
+                            <h2><t t-esc="state.pending_invoices"/></h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5>Monthly Sales Trend</h5>
+                            <div id="monthly_sales"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Invoice Tree View -->
+    <record id="view_twh_invoice_tree" model="ir.ui.view">
+        <field name="name">twh.invoice.tree</field>
+        <field name="model">twh.invoice</field>
+        <field name="arch" type="xml">
+            <tree string="TWH Invoices" decoration-info="state=='draft'" 
+                  decoration-success="state=='paid'" decoration-danger="state=='overdue'">
+                <field name="name"/>
+                <field name="date_invoice"/>
+                <field name="partner_id"/>
+                <field name="sales_person_id"/>
+                <field name="price_tier"/>
+                <field name="subtotal" widget="monetary"/>
+                <field name="discount_percent"/>
+                <field name="total" widget="monetary"/>
+                <field name="date_due"/>
+                <field name="state" widget="badge" 
+                       decoration-info="state=='draft'"
+                       decoration-warning="state=='confirmed'"
+                       decoration-success="state=='paid'"
+                       decoration-danger="state=='overdue'"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Invoice Form View -->
+    <record id="view_twh_invoice_form" model="ir.ui.view">
+        <field name="name">twh.invoice.form</field>
+        <field name="model">twh.invoice</field>
+        <field name="arch" type="xml">
+            <form string="TWH Invoice">
+                <header>
+                    <button name="action_confirm" string="Confirm" type="object" 
+                            class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_mark_paid" string="Mark as Paid" type="object" 
+                            class="oe_highlight" invisible="state not in ['confirmed', 'overdue']"/>
+                    <button name="action_print_invoice" string="Print Invoice" type="object" 
+                            invisible="state == 'draft'"/>
+                    <button name="action_cancel" string="Cancel" type="object" 
+                            invisible="state in ['cancelled', 'paid']" 
+                            confirm="Are you sure you want to cancel this invoice?"/>
+                    <button name="action_set_to_draft" string="Set to Draft" type="object" 
+                            invisible="state not in ['cancelled']"/>
+                    <field name="state" widget="statusbar" 
+                           statusbar_visible="draft,confirmed,paid"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_print_invoice" type="object" 
+                                class="oe_stat_button" icon="fa-file-pdf-o" 
+                                invisible="state == 'draft'">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Print</span>
+                                <span class="o_stat_text">Invoice</span>
+                            </div>
+                        </button>
+                    </div>
+                    
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    
+                    <group>
+                        <group name="customer_info">
+                            <field name="partner_id" 
+                                   domain="[('is_company', '=', True)]"
+                                   required="1"
+                                   readonly="state != 'draft'"/>
+                            <field name="date_invoice" 
+                                   required="1"
+                                   readonly="state != 'draft'"/>
+                            <field name="payment_term_days" 
+                                   readonly="state != 'draft'"/>
+                            <field name="date_due" readonly="1"/>
+                        </group>
+                        <group name="sales_info">
+                            <field name="sales_person_id" 
+                                   required="1"
+                                   readonly="state != 'draft'"/>
+                            <field name="price_tier" 
+                                   required="1"
+                                   readonly="state != 'draft'"/>
+                            <field name="discount_percent" 
+                                   readonly="state != 'draft'"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Invoice Lines" name="invoice_lines">
+                            <field name="invoice_line_ids" 
+                                   readonly="state != 'draft'">
+                                <tree editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="product_id" 
+                                           domain="[('sale_ok', '=', True)]"
+                                           required="1"/>
+                                    <field name="description"/>
+                                    <field name="quantity" required="1"/>
+                                    <field name="price_unit" widget="monetary" required="1"/>
+                                    <field name="subtotal" widget="monetary" readonly="1"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </tree>
+                            </field>
+                            <group class="oe_subtotal_footer oe_right">
+                                <field name="subtotal" widget="monetary"/>
+                                <field name="discount_amount" widget="monetary"/>
+                                <div class="oe_subtotal_footer_separator oe_inline">
+                                    <label for="total"/>
+                                </div>
+                                <field name="total" widget="monetary" 
+                                       class="oe_subtotal_footer_separator"/>
+                            </group>
+                        </page>
+                        
+                        <page string="Commission" name="commission" 
+                              invisible="state == 'draft'">
+                            <field name="commission_ids" readonly="1">
+                                <tree>
+                                    <field name="product_id"/>
+                                    <field name="quantity"/>
+                                    <field name="cost_price" widget="monetary"/>
+                                    <field name="selling_price" widget="monetary"/>
+                                    <field name="margin" widget="monetary"/>
+                                    <field name="commission_amount" widget="monetary"/>
+                                    <field name="state" widget="badge"/>
+                                </tree>
+                            </field>
+                            <group class="oe_subtotal_footer oe_right">
+                                <field name="total_commission" widget="monetary" 
+                                       class="oe_subtotal_footer_separator"/>
+                            </group>
+                        </page>
+                        
+                        <page string="Other Info" name="other_info">
+                            <group>
+                                <field name="notes" placeholder="Internal notes..."/>
+                                <field name="company_id" invisible="1"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Invoice Search View -->
+    <record id="view_twh_invoice_search" model="ir.ui.view">
+        <field name="name">twh.invoice.search</field>
+        <field name="model">twh.invoice</field>
+        <field name="arch" type="xml">
+            <search string="Search Invoices">
+                <field name="name" string="Invoice Number"/>
+                <field name="partner_id" string="Customer"/>
+                <field name="sales_person_id" string="Sales Person"/>
+                <separator/>
+                <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Confirmed" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
+                <filter string="Paid" name="paid" domain="[('state', '=', 'paid')]"/>
+                <filter string="Overdue" name="overdue" domain="[('state', '=', 'overdue')]"/>
+                <separator/>
+                <filter string="My Invoices" name="my_invoices" 
+                        domain="[('sales_person_id', '=', uid)]"/>
+                <separator/>
+                <filter string="This Month" name="this_month" 
+                        domain="[('date_invoice', '&gt;=', (context_today() - relativedelta(day=1)).strftime('%Y-%m-%d')),
+                                 ('date_invoice', '&lt;=', (context_today() + relativedelta(day=31)).strftime('%Y-%m-%d'))]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Customer" name="group_partner" context="{'group_by': 'partner_id'}"/>
+                    <filter string="Sales Person" name="group_sales" context="{'group_by': 'sales_person_id'}"/>
+                    <filter string="State" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Invoice Date" name="group_date" context="{'group_by': 'date_invoice'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Invoice Action -->
+    <record id="action_twh_invoice" model="ir.actions.act_window">
+        <field name="name">TWH Invoices</field>
+        <field name="res_model">twh.invoice</field>
+        <field name="view_mode">tree,form</field>
+        <field name="context">{'search_default_confirmed': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first TWH Invoice
+            </p>
+            <p>
+                Click the create button to start creating invoices for your customers.
+            </p>
+        </field>
+    </record>
+
+    <!-- Sequence for Invoice Number -->
+    <record id="seq_twh_invoice" model="ir.sequence">
+        <field name="name">TWH Invoice Sequence</field>
+        <field name="code">twh.invoice</field>
+        <field name="prefix">TWH/INV/%(year)s/</field>
+        <field name="padding">5</field>
+        <field name="number_increment">1</field>
+        <field name="number_next">1</field>
+    </record>
+
+</odoo>
