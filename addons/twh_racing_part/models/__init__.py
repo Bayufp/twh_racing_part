@@ -6,3 +6,4 @@ from . import sales_commission
 from . import due_reminder
 from . import product_analytics
 from . import res_partner
+from . import twh_dashboard

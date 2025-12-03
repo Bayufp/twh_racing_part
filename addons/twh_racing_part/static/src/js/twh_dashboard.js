@@ -14,11 +14,13 @@ export class TwhDashboard extends Component {
 
   setup() {
     this.orm = useService("orm");
+    this.rpc = useService("rpc");
     this.state = useState({
       total_products: 0,
       total_customers: 0,
       pending_invoices: 0,
       monthly_sales: [],
+      isLoading: true,
     });
 
     onMounted(() => {
@@ -28,73 +30,124 @@ export class TwhDashboard extends Component {
 
   async loadDashboardData() {
     try {
+      this.state.isLoading = true;
+
       // Hitung total products
       this.state.total_products = await this.orm.searchCount(
         "product.product",
-        []
+        [["sale_ok", "=", true]]
       );
 
-      // Hitung total customers
+      // Hitung total customers (hanya yang aktif)
       this.state.total_customers = await this.orm.searchCount("res.partner", [
         ["customer_rank", ">", 0],
+        ["active", "=", true],
       ]);
 
-      // Hitung pending invoices
+      // Hitung pending invoices (yang belum lunas)
       this.state.pending_invoices = await this.orm.searchCount("account.move", [
         ["move_type", "=", "out_invoice"],
-        ["payment_state", "=", "not_paid"],
+        ["state", "=", "posted"],
+        ["payment_state", "in", ["not_paid", "partial"]],
       ]);
 
-      // Data sales dummy
-      this.state.monthly_sales = [
-        { month: "Jan", amount: 15000 },
-        { month: "Feb", amount: 23000 },
-        { month: "Mar", amount: 18000 },
-        { month: "Apr", amount: 32000 },
-        { month: "May", amount: 28000 },
-        { month: "Jun", amount: 35000 },
-      ];
+      // Ambil data penjualan REAL dari RPC
+      const salesData = await this.rpc("/twh/dashboard/sales_data", {});
+      this.state.monthly_sales = salesData;
 
-      this.renderCharts();
+      this.state.isLoading = false;
+
+      // Render chart setelah DOM ready
+      setTimeout(() => this.renderCharts(), 100);
     } catch (error) {
       console.error("Failed to load dashboard data:", error);
+      this.state.isLoading = false;
     }
   }
 
   renderCharts() {
     if (typeof ApexCharts === "undefined") {
-      console.error("ApexCharts not loaded");
+      console.error("ApexCharts library not loaded");
       return;
     }
 
     const chartElement = document.querySelector("#monthly_sales");
     if (!chartElement) {
-      console.error("Chart element not found");
+      console.error("Chart element #monthly_sales not found");
       return;
     }
+
+    // Clear existing chart
+    chartElement.innerHTML = "";
 
     const options = {
       series: [
         {
-          name: "Sales",
+          name: "Total Penjualan (Rp)",
           data: this.state.monthly_sales.map((item) => item.amount),
         },
       ],
       chart: {
-        type: "line",
+        type: "area",
         height: 350,
+        toolbar: {
+          show: true,
+        },
+        zoom: {
+          enabled: false,
+        },
       },
-      xaxis: {
-        categories: this.state.monthly_sales.map((item) => item.month),
+      dataLabels: {
+        enabled: false,
       },
       stroke: {
         curve: "smooth",
+        width: 3,
       },
       colors: ["#7E3AF2"],
+      fill: {
+        type: "gradient",
+        gradient: {
+          shadeIntensity: 1,
+          opacityFrom: 0.7,
+          opacityTo: 0.2,
+          stops: [0, 90, 100],
+        },
+      },
+      xaxis: {
+        categories: this.state.monthly_sales.map((item) => item.month),
+        labels: {
+          style: {
+            fontSize: "12px",
+          },
+        },
+      },
+      yaxis: {
+        labels: {
+          formatter: function (value) {
+            return "Rp " + value.toLocaleString("id-ID");
+          },
+        },
+      },
+      tooltip: {
+        y: {
+          formatter: function (value) {
+            return "Rp " + value.toLocaleString("id-ID");
+          },
+        },
+      },
+      grid: {
+        borderColor: "#f1f1f1",
+      },
     };
 
     const chart = new ApexCharts(chartElement, options);
     chart.render();
+  }
+
+  // Method untuk refresh data
+  async refreshDashboard() {
+    await this.loadDashboardData();
   }
 }
 

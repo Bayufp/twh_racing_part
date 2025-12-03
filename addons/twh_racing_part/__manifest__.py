@@ -37,6 +37,9 @@
         # Security
         'security/twh_security.xml',
         'security/ir.model.access.csv',
+        
+        # Models
+        'models/twh_dashboard.py',
 
         # Views
         'views/action_views.xml',
@@ -73,7 +76,7 @@
         # CSS & JS
             'twh_racing_part/static/src/css/twh_dashboard.css',
             'twh_racing_part/static/src/js/twh_dashboard.js',
-            'twh_racing_part/static/src/js/twh_dashboard_chart.js',
+            
             
         # XML template
             'twh_racing_part/static/src/xml/dashboard_template.xml',
