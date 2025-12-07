@@ -20,7 +20,6 @@ export class TwhDashboard extends Component {
       total_customers: 0,
       pending_invoices: 0,
       monthly_sales: [],
-      isLoading: true,
     });
 
     onMounted(() => {
@@ -30,8 +29,6 @@ export class TwhDashboard extends Component {
 
   async loadDashboardData() {
     try {
-      this.state.isLoading = true;
-
       // Hitung total products
       this.state.total_products = await this.orm.searchCount(
         "product.product",
@@ -53,15 +50,12 @@ export class TwhDashboard extends Component {
 
       // Ambil data penjualan REAL dari RPC
       const salesData = await this.rpc("/twh/dashboard/sales_data", {});
-      this.state.monthly_sales = salesData;
-
-      this.state.isLoading = false;
+      this.state.monthly_sales = salesData || [];
 
       // Render chart setelah DOM ready
       setTimeout(() => this.renderCharts(), 100);
     } catch (error) {
       console.error("Failed to load dashboard data:", error);
-      this.state.isLoading = false;
     }
   }
 

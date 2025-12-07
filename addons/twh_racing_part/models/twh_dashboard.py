@@ -15,21 +15,26 @@ class TwhDashboard(models.TransientModel):
     def get_sales_data(self, months=6):
         """
         Ambil data penjualan real dari sale.order
-        untuk N bulan terakhir
+        untuk N bulan terakhir (termasuk bulan ini)
         """
         try:
             today = datetime.now()
             sales_data = []
             
             for i in range(months):
-                # Mundur dari bulan sekarang
+                # Mundur dari bulan sekarang (termasuk bulan ini)
                 target_date = today - relativedelta(months=months - i - 1)
                 
                 # Awal bulan
                 month_start = target_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
                 
-                # Akhir bulan (awal bulan berikutnya - 1 detik)
-                month_end = (month_start + relativedelta(months=1)) - relativedelta(seconds=1)
+                # Akhir bulan (hari ini jika bulan ini, atau akhir bulan jika bulan lalu)
+                if target_date.month == today.month and target_date.year == today.year:
+                    # Bulan ini: sampai hari ini
+                    month_end = today.replace(hour=23, minute=59, second=59, microsecond=999999)
+                else:
+                    # Bulan lalu: sampai akhir bulan
+                    month_end = (month_start + relativedelta(months=1)) - relativedelta(seconds=1)
                 
                 # Query sale orders yang sudah confirmed
                 domain = [
@@ -59,12 +64,7 @@ class TwhDashboard(models.TransientModel):
                     f"(Range: {month_start.date()} to {month_end.date()})"
                 )
             
-            total_orders = sum(len(self.env['sale.order'].search([
-                ('date_order', '>=', fields.Datetime.to_string(today - relativedelta(months=months))),
-                ('state', 'in', ['sale', 'done'])
-            ])))
-            
-            _logger.info(f"✅ Sales data loaded: {len(sales_data)} months, Total orders: {total_orders}")
+            _logger.info(f"✅ Sales data loaded: {len(sales_data)} months")
             return sales_data
             
         except Exception as e:

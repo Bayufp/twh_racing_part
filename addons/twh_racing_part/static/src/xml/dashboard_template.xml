@@ -10,85 +10,74 @@
                 </button>
             </div>
 
-            <!-- Loading State -->
-            <div t-if="state.isLoading" class="text-center py-5">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
+            <!-- Statistics Cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-lg-4 col-md-6">
+                    <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <div class="card-body text-white">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-white-50 mb-2">Total Products</h6>
+                                    <h2 class="mb-0 fw-bold"><t t-esc="state.total_products"/></h2>
+                                </div>
+                                <div class="fs-1 opacity-50">
+                                    <i class="fa fa-cube"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <p class="mt-2">Memuat data dashboard...</p>
+                
+                <div class="col-lg-4 col-md-6">
+                    <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                        <div class="card-body text-white">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-white-50 mb-2">Total Customers</h6>
+                                    <h2 class="mb-0 fw-bold"><t t-esc="state.total_customers"/></h2>
+                                </div>
+                                <div class="fs-1 opacity-50">
+                                    <i class="fa fa-users"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 col-md-6">
+                    <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%);">
+                        <div class="card-body text-white">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-white-50 mb-2">Pending Invoices</h6>
+                                    <h2 class="mb-0 fw-bold"><t t-esc="state.pending_invoices"/></h2>
+                                </div>
+                                <div class="fs-1 opacity-50">
+                                    <i class="fa fa-file-text-o"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- Dashboard Content -->
-            <div t-else="">
-                <!-- Statistics Cards -->
-                <div class="row g-3 mb-4">
-                    <div class="col-lg-4 col-md-6">
-                        <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                            <div class="card-body text-white">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="text-white-50 mb-2">Total Products</h6>
-                                        <h2 class="mb-0 fw-bold"><t t-esc="state.total_products"/></h2>
-                                    </div>
-                                    <div class="fs-1 opacity-50">
-                                        <i class="fa fa-cube"/>
-                                    </div>
-                                </div>
-                            </div>
+            <!-- Sales Chart -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-0 pt-3">
+                            <h5 class="mb-0">
+                                <i class="fa fa-line-chart text-primary me-2"/>
+                                Monthly Sales Trend
+                            </h5>
+                            <small class="text-muted">Data penjualan 6 bulan terakhir</small>
                         </div>
-                    </div>
-                    
-                    <div class="col-lg-4 col-md-6">
-                        <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                            <div class="card-body text-white">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="text-white-50 mb-2">Total Customers</h6>
-                                        <h2 class="mb-0 fw-bold"><t t-esc="state.total_customers"/></h2>
-                                    </div>
-                                    <div class="fs-1 opacity-50">
-                                        <i class="fa fa-users"/>
-                                    </div>
-                                </div>
+                        <div class="card-body">
+                            <div t-if="state.monthly_sales.length === 0" class="text-center py-5 text-muted">
+                                <i class="fa fa-info-circle fa-3x mb-3"/>
+                                <p>Belum ada data penjualan. Mulai buat sales order untuk melihat grafik.</p>
                             </div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-lg-4 col-md-6">
-                        <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%);">
-                            <div class="card-body text-white">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="text-white-50 mb-2">Pending Invoices</h6>
-                                        <h2 class="mb-0 fw-bold"><t t-esc="state.pending_invoices"/></h2>
-                                    </div>
-                                    <div class="fs-1 opacity-50">
-                                        <i class="fa fa-file-text-o"/>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Sales Chart -->
-                <div class="row">
-                    <div class="col-12">
-                        <div class="card border-0 shadow-sm">
-                            <div class="card-header bg-white border-0 pt-3">
-                                <h5 class="mb-0">
-                                    <i class="fa fa-line-chart text-primary me-2"/>
-                                    Monthly Sales Trend
-                                </h5>
-                                <small class="text-muted">Data penjualan 6 bulan terakhir</small>
-                            </div>
-                            <div class="card-body">
-                                <div t-if="state.monthly_sales.length === 0" class="text-center py-5 text-muted">
-                                    <i class="fa fa-info-circle fa-3x mb-3"/>
-                                    <p>Belum ada data penjualan. Mulai buat sales order untuk melihat grafik.</p>
-                                </div>
-                                <div t-else="" id="monthly_sales" style="min-height: 350px;"/>
-                            </div>
+                            <div t-else="" id="monthly_sales" style="min-height: 350px;"/>
                         </div>
                     </div>
                 </div>
