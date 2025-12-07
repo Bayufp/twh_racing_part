@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-from odoo import models, api
-from datetime import datetime, timedelta
+from odoo import models, api, fields
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 import logging
 
 _logger = logging.getLogger(__name__)
@@ -17,20 +18,23 @@ class TwhDashboard(models.TransientModel):
         untuk N bulan terakhir
         """
         try:
-            end_date = datetime.now()
-            start_date = end_date - timedelta(days=30 * months)
-            
+            today = datetime.now()
             sales_data = []
             
             for i in range(months):
-                # Hitung range tanggal per bulan
-                month_start = end_date - timedelta(days=30 * (months - i))
-                month_end = month_start + timedelta(days=30)
+                # Mundur dari bulan sekarang
+                target_date = today - relativedelta(months=months - i - 1)
+                
+                # Awal bulan
+                month_start = target_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+                
+                # Akhir bulan (awal bulan berikutnya - 1 detik)
+                month_end = (month_start + relativedelta(months=1)) - relativedelta(seconds=1)
                 
                 # Query sale orders yang sudah confirmed
                 domain = [
-                    ('date_order', '>=', month_start.strftime('%Y-%m-%d')),
-                    ('date_order', '<', month_end.strftime('%Y-%m-%d')),
+                    ('date_order', '>=', fields.Datetime.to_string(month_start)),
+                    ('date_order', '<=', fields.Datetime.to_string(month_end)),
                     ('state', 'in', ['sale', 'done'])  # Hanya yang sudah confirm
                 ]
                 
@@ -39,16 +43,34 @@ class TwhDashboard(models.TransientModel):
                 # Hitung total amount
                 total_amount = sum(orders.mapped('amount_total'))
                 
+                # Format bulan
+                month_label = month_start.strftime('%b %Y')
+                
                 sales_data.append({
-                    'month': month_start.strftime('%b %Y'),
+                    'month': month_label,
                     'amount': round(total_amount, 2)
                 })
+                
+                # Log detail untuk debugging
+                _logger.info(
+                    f"📊 {month_label}: "
+                    f"{len(orders)} orders, "
+                    f"Total: Rp {total_amount:,.0f} "
+                    f"(Range: {month_start.date()} to {month_end.date()})"
+                )
             
-            _logger.info(f"Sales data loaded: {len(sales_data)} months")
+            total_orders = sum(len(self.env['sale.order'].search([
+                ('date_order', '>=', fields.Datetime.to_string(today - relativedelta(months=months))),
+                ('state', 'in', ['sale', 'done'])
+            ])))
+            
+            _logger.info(f"✅ Sales data loaded: {len(sales_data)} months, Total orders: {total_orders}")
             return sales_data
             
         except Exception as e:
-            _logger.error(f"Error loading sales data: {str(e)}")
+            _logger.error(f"❌ Error loading sales data: {str(e)}")
+            import traceback
+            _logger.error(traceback.format_exc())
             return []
 
     @api.model
@@ -56,18 +78,38 @@ class TwhDashboard(models.TransientModel):
         """
         Get summary statistics untuk dashboard
         """
-        return {
-            'total_products': self.env['product.product'].search_count([
-                ('sale_ok', '=', True)
-            ]),
-            'total_customers': self.env['res.partner'].search_count([
-                ('customer_rank', '>', 0),
-                ('active', '=', True)
-            ]),
-            'pending_invoices': self.env['account.move'].search_count([
-                ('move_type', '=', 'out_invoice'),
-                ('state', '=', 'posted'),
-                ('payment_state', 'in', ['not_paid', 'partial'])
-            ]),
-            'monthly_sales': self.get_sales_data()
-        }
+        try:
+            summary = {
+                'total_products': self.env['product.product'].search_count([
+                    ('sale_ok', '=', True),
+                    ('active', '=', True)
+                ]),
+                'total_customers': self.env['res.partner'].search_count([
+                    ('customer_rank', '>', 0),
+                    ('active', '=', True)
+                ]),
+                'pending_invoices': self.env['account.move'].search_count([
+                    ('move_type', '=', 'out_invoice'),
+                    ('state', '=', 'posted'),
+                    ('payment_state', 'in', ['not_paid', 'partial'])
+                ]),
+                'monthly_sales': self.get_sales_data()
+            }
+            
+            _logger.info(
+                f"📈 Dashboard Summary: "
+                f"{summary['total_products']} products, "
+                f"{summary['total_customers']} customers, "
+                f"{summary['pending_invoices']} pending invoices"
+            )
+            
+            return summary
+            
+        except Exception as e:
+            _logger.error(f"❌ Error getting dashboard summary: {str(e)}")
+            return {
+                'total_products': 0,
+                'total_customers': 0,
+                'pending_invoices': 0,
+                'monthly_sales': []
+            }

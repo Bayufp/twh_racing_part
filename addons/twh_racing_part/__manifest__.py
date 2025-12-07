@@ -37,14 +37,12 @@
         # Security
         'security/twh_security.xml',
         'security/ir.model.access.csv',
-        
-        # Models
-        'models/twh_dashboard.py',
 
         # Views
         'views/action_views.xml',
         'views/menu_views.xml',
         'views/dashboard_views.xml',
+        'views/sale_order_views.xml',
         'views/twh_invoice_views.xml',
         'views/sales_commission_views.xml',
         'views/due_reminder_views.xml',

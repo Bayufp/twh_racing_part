@@ -16,46 +16,100 @@ class TwhInvoice(models.Model):
     _order = 'date_invoice desc, id desc'
     
     # Basic Info
-    name = fields.Char(string='Invoice Number', required=True, copy=False, 
-                       default='New', tracking=True)
-    partner_id = fields.Many2one('res.partner', string='Customer/Toko', 
-                                  required=True, tracking=True,
-                                  domain=[('is_company', '=', True)])
-    date_invoice = fields.Date(string='Invoice Date', required=True, 
-                                default=fields.Date.today, tracking=True)
+    name = fields.Char(
+        string='Invoice Number', 
+        required=True, 
+        copy=False, 
+        default='New', 
+        tracking=True
+    )
+    partner_id = fields.Many2one(
+        'res.partner', 
+        string='Customer/Toko', 
+        required=True, 
+        tracking=True,
+        domain=[('is_company', '=', True)]
+    )
+    date_invoice = fields.Date(
+        string='Invoice Date', 
+        required=True, 
+        default=fields.Date.today, 
+        tracking=True
+    )
     
     # Sales Info
-    sales_person_id = fields.Many2one('res.users', string='Sales Person', 
-                                       default=lambda self: self.env.user,
-                                       tracking=True)
+    sales_person_id = fields.Many2one(
+        'res.users', 
+        string='Sales Person', 
+        default=lambda self: self.env.user,
+        tracking=True
+    )
     price_tier = fields.Selection([
         ('price_a', 'Harga A'),
         ('price_b', 'Harga B'),
         ('dealer', 'Dealer'),
     ], string='Price Tier', required=True, default='price_a', tracking=True)
     
+    # Link to Sales Order (NEW)
+    sale_order_id = fields.Many2one(
+        'sale.order',
+        string='Sales Order',
+        readonly=True,
+        copy=False,
+        tracking=True,
+        help='Sales Order yang generate invoice ini'
+    )
+    
     # Invoice Lines
-    invoice_line_ids = fields.One2many('twh.invoice.line', 'invoice_id', 
-                                        string='Invoice Lines')
+    invoice_line_ids = fields.One2many(
+        'twh.invoice.line', 
+        'invoice_id', 
+        string='Invoice Lines'
+    )
     
     # Financial
-    subtotal = fields.Monetary(string='Subtotal', compute='_compute_amounts', 
-                                store=True, currency_field='currency_id')
-    discount_percent = fields.Float(string='Discount (%)', default=0.0, 
-                                     digits='Discount', tracking=True)
-    discount_amount = fields.Monetary(string='Discount Amount', 
-                                       compute='_compute_amounts', store=True,
-                                       currency_field='currency_id')
-    total = fields.Monetary(string='Total', compute='_compute_amounts', 
-                            store=True, currency_field='currency_id')
-    currency_id = fields.Many2one('res.currency', string='Currency', 
-                                   default=lambda self: self.env.company.currency_id)
+    subtotal = fields.Monetary(
+        string='Subtotal', 
+        compute='_compute_amounts', 
+        store=True, 
+        currency_field='currency_id'
+    )
+    discount_percent = fields.Float(
+        string='Discount (%)', 
+        default=0.0, 
+        digits='Discount', 
+        tracking=True
+    )
+    discount_amount = fields.Monetary(
+        string='Discount Amount', 
+        compute='_compute_amounts', 
+        store=True,
+        currency_field='currency_id'
+    )
+    total = fields.Monetary(
+        string='Total', 
+        compute='_compute_amounts', 
+        store=True, 
+        currency_field='currency_id'
+    )
+    currency_id = fields.Many2one(
+        'res.currency', 
+        string='Currency', 
+        default=lambda self: self.env.company.currency_id
+    )
     
     # Payment Terms
-    payment_term_days = fields.Integer(string='Payment Terms (Days)', 
-                                        default=60, tracking=True)
-    date_due = fields.Date(string='Due Date', compute='_compute_due_date', 
-                           store=True, tracking=True)
+    payment_term_days = fields.Integer(
+        string='Payment Terms (Days)', 
+        default=60, 
+        tracking=True
+    )
+    date_due = fields.Date(
+        string='Due Date', 
+        compute='_compute_due_date', 
+        store=True, 
+        tracking=True
+    )
     
     # Status
     state = fields.Selection([
@@ -67,18 +121,27 @@ class TwhInvoice(models.Model):
     ], string='Status', default='draft', tracking=True)
     
     # Commission
-    commission_ids = fields.One2many('twh.sales.commission', 'invoice_id', 
-                                      string='Sales Commissions')
-    total_commission = fields.Monetary(string='Total Commission', 
-                                        compute='_compute_total_commission',
-                                        store=True, currency_field='currency_id')
+    commission_ids = fields.One2many(
+        'twh.sales.commission', 
+        'invoice_id', 
+        string='Sales Commissions'
+    )
+    total_commission = fields.Monetary(
+        string='Total Commission', 
+        compute='_compute_total_commission',
+        store=True, 
+        currency_field='currency_id'
+    )
     
     # Notes
     notes = fields.Text(string='Notes')
     
     # Company
-    company_id = fields.Many2one('res.company', string='Company', 
-                                  default=lambda self: self.env.company)
+    company_id = fields.Many2one(
+        'res.company', 
+        string='Company', 
+        default=lambda self: self.env.company
+    )
     
     @api.model
     def create(self, vals):
@@ -110,8 +173,10 @@ class TwhInvoice(models.Model):
     @api.depends('commission_ids', 'commission_ids.commission_amount')
     def _compute_total_commission(self):
         for invoice in self:
-            invoice.total_commission = sum(commission.commission_amount 
-                                            for commission in invoice.commission_ids)
+            invoice.total_commission = sum(
+                commission.commission_amount 
+                for commission in invoice.commission_ids
+            )
     
     def action_confirm(self):
         """Confirm invoice and create commission"""
@@ -142,6 +207,24 @@ class TwhInvoice(models.Model):
         for invoice in self:
             invoice.write({'state': 'draft'})
             invoice.message_post(body=_('Invoice set to draft'))
+    
+    def action_view_sale_order(self):
+        """
+        View Sales Order yang generate invoice ini (NEW)
+        """
+        self.ensure_one()
+        
+        if not self.sale_order_id:
+            raise UserError(_('This invoice is not generated from Sales Order.'))
+        
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Sales Order',
+            'res_model': 'sale.order',
+            'res_id': self.sale_order_id.id,
+            'view_mode': 'form',
+            'target': 'current',
+        }
     
     def _create_commission(self):
         """Create sales commission based on margin"""
@@ -192,20 +275,45 @@ class TwhInvoiceLine(models.Model):
     _order = 'invoice_id, sequence, id'
     
     sequence = fields.Integer(string='Sequence', default=10)
-    invoice_id = fields.Many2one('twh.invoice', string='Invoice', 
-                                  required=True, ondelete='cascade')
-    product_id = fields.Many2one('product.product', string='Product', 
-                                  required=True, domain=[('sale_ok', '=', True)])
+    invoice_id = fields.Many2one(
+        'twh.invoice', 
+        string='Invoice', 
+        required=True, 
+        ondelete='cascade'
+    )
+    product_id = fields.Many2one(
+        'product.product', 
+        string='Product', 
+        required=True, 
+        domain=[('sale_ok', '=', True)]
+    )
     description = fields.Text(string='Description')
-    quantity = fields.Float(string='Quantity', default=1.0, digits='Product Unit of Measure')
-    price_unit = fields.Monetary(string='Unit Price', required=True, 
-                                  currency_field='currency_id')
-    subtotal = fields.Monetary(string='Subtotal', compute='_compute_subtotal', 
-                                store=True, currency_field='currency_id')
-    currency_id = fields.Many2one(related='invoice_id.currency_id', string='Currency')
+    quantity = fields.Float(
+        string='Quantity', 
+        default=1.0, 
+        digits='Product Unit of Measure'
+    )
+    price_unit = fields.Monetary(
+        string='Unit Price', 
+        required=True, 
+        currency_field='currency_id'
+    )
+    subtotal = fields.Monetary(
+        string='Subtotal', 
+        compute='_compute_subtotal', 
+        store=True, 
+        currency_field='currency_id'
+    )
+    currency_id = fields.Many2one(
+        related='invoice_id.currency_id', 
+        string='Currency'
+    )
     
     # Price tier reference
-    price_tier = fields.Selection(related='invoice_id.price_tier', store=True)
+    price_tier = fields.Selection(
+        related='invoice_id.price_tier', 
+        store=True
+    )
     
     @api.depends('quantity', 'price_unit')
     def _compute_subtotal(self):

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Inherit Sales Order Form -->
+    <record id="view_order_form_twh_inherit" model="ir.ui.view">
+        <field name="name">sale.order.form.twh.inherit</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            
+            <!-- Add Price Tier field after partner_id -->
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="price_tier_id" 
+                       options="{'no_create': True, 'no_open': True}"
+                       readonly="state in ['done', 'cancel']"/>
+            </xpath>
+
+            <!-- Add smart buttons -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <!-- Button: View TWH Invoice -->
+                <button name="action_view_twh_invoice"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-file-text-o"
+                        invisible="twh_invoice_count == 0">
+                    <field name="twh_invoice_count" widget="statinfo" string="TWH Invoice"/>
+                </button>
+            </xpath>
+
+            <!-- Add Generate TWH Invoice button -->
+            <xpath expr="//button[@name='action_quotation_send']" position="after">
+                <button name="action_generate_twh_invoice"
+                        type="object"
+                        string="Generate TWH Invoice"
+                        class="btn-primary"
+                        invisible="state not in ['sale', 'done'] or twh_invoice_id != False"/>
+            </xpath>
+
+            <!-- Add TWH Invoice link field (invisible, untuk technical) -->
+            <xpath expr="//field[@name='payment_term_id']" position="after">
+                <field name="twh_invoice_id" invisible="1"/>
+            </xpath>
+
+        </field>
+    </record>
+
+    <!-- Add Price Tier in Tree View -->
+    <record id="view_order_tree_twh_inherit" model="ir.ui.view">
+        <field name="name">sale.order.tree.twh.inherit</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='user_id']" position="after">
+                <field name="price_tier_id" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
