@@ -12,7 +12,9 @@
         <field name="numbercall">-1</field>
         <field name="active" eval="True"/>
         <field name="doall" eval="False"/>
-        <field name="nextcall" eval="(DateTime.now() + timedelta(days=1)).strftime('%Y-%m-%d 01:00:00')"/>
+        <!-- Next execution: besok jam 01:00 -->
+        <field name="nextcall">2025-12-09 01:00:00</field>
+        <field name="user_id" ref="base.user_root"/>
     </record>
 
     <!-- Cron Job: Send Pending Reminders -->
@@ -26,7 +28,9 @@
         <field name="numbercall">-1</field>
         <field name="active" eval="True"/>
         <field name="doall" eval="False"/>
-        <field name="nextcall" eval="(DateTime.now() + timedelta(days=1)).strftime('%Y-%m-%d 08:00:00')"/>
+        <!-- Next execution: besok jam 08:00 -->
+        <field name="nextcall">2025-12-09 08:00:00</field>
+        <field name="user_id" ref="base.user_root"/>
     </record>
 
 </odoo>

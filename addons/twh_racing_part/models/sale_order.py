@@ -9,14 +9,12 @@ _logger = logging.getLogger(__name__)
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
-    # Field Price Tier untuk TWH
     price_tier_id = fields.Many2one(
         'twh.price.tier',
         string='Price Tier',
         help='Select price tier for this order (Bayu, Dealer, Harga A, B, or HET)'
     )
     
-    # Link ke TWH Invoice
     twh_invoice_id = fields.Many2one(
         'twh.invoice',
         string='TWH Invoice',
@@ -37,37 +35,23 @@ class SaleOrder(models.Model):
 
     @api.onchange('price_tier_id', 'partner_id')
     def _onchange_price_tier(self):
-        """
-        Update harga semua order lines saat Price Tier berubah
-        """
         if self.price_tier_id and self.order_line:
             for line in self.order_line:
                 if line.product_id:
-                    # Cari harga produk sesuai price tier (FIXED: pakai tier_id bukan price_tier_id)
                     product_price = self.env['twh.product.price'].search([
                         ('product_id', '=', line.product_id.id),
-                        ('tier_id', '=', self.price_tier_id.id)  # FIXED: tier_id
+                        ('tier_id', '=', self.price_tier_id.id)
                     ], limit=1)
                     
                     if product_price:
                         line.price_unit = product_price.price
-                        _logger.info(
-                            f"✅ Updated price for {line.product_id.name}: "
-                            f"Rp {product_price.price:,.0f} ({self.price_tier_id.name})"
-                        )
+                        _logger.info(f"✅ Updated price for {line.product_id.name}: Rp {product_price.price:,.0f} ({self.price_tier_id.name})")
                     else:
-                        _logger.warning(
-                            f"⚠️ No price found for {line.product_id.name} "
-                            f"with tier {self.price_tier_id.name}"
-                        )
+                        _logger.warning(f"⚠️ No price found for {line.product_id.name} with tier {self.price_tier_id.name}")
 
     def action_generate_twh_invoice(self):
-        """
-        Generate TWH Invoice dari Sales Order
-        """
         self.ensure_one()
         
-        # Validasi
         if not self.price_tier_id:
             raise UserError(_('Please select a Price Tier before generating TWH Invoice.'))
         
@@ -77,7 +61,6 @@ class SaleOrder(models.Model):
         if self.state not in ['sale', 'done']:
             raise UserError(_('Please confirm the Sales Order first.'))
         
-        # Prepare invoice lines
         invoice_lines = []
         for line in self.order_line:
             if line.product_id:
@@ -89,13 +72,10 @@ class SaleOrder(models.Model):
                     'subtotal': line.price_subtotal,
                 }))
         
-        # Map price_tier_id ke price_tier selection field di TWH Invoice
-        # Get tier code dari price tier
-        price_tier_code = 'price_a'  # default
+        price_tier_code = 'price_a'
         if self.price_tier_id and self.price_tier_id.code:
             price_tier_code = self.price_tier_id.code
         
-        # Create TWH Invoice
         twh_invoice = self.env['twh.invoice'].create({
             'partner_id': self.partner_id.id,
             'sale_order_id': self.id,
@@ -107,12 +87,9 @@ class SaleOrder(models.Model):
             'notes': f'Generated from Sales Order: {self.name}',
         })
         
-        # Link TWH Invoice ke Sales Order
         self.twh_invoice_id = twh_invoice.id
-        
         _logger.info(f"✅ TWH Invoice {twh_invoice.name} generated from SO {self.name}")
         
-        # Open TWH Invoice
         return {
             'type': 'ir.actions.act_window',
             'name': 'TWH Invoice',
@@ -123,9 +100,6 @@ class SaleOrder(models.Model):
         }
 
     def action_view_twh_invoice(self):
-        """
-        View TWH Invoice yang sudah di-generate
-        """
         self.ensure_one()
         
         if not self.twh_invoice_id:
@@ -146,24 +120,30 @@ class SaleOrderLine(models.Model):
 
     @api.onchange('product_id')
     def _onchange_product_id_twh(self):
-        """
-        Auto-set harga dari Price Tier saat pilih produk
-        """
         if self.product_id and self.order_id.price_tier_id:
-            # Cari harga produk sesuai price tier (FIXED: pakai tier_id)
             product_price = self.env['twh.product.price'].search([
                 ('product_id', '=', self.product_id.id),
-                ('tier_id', '=', self.order_id.price_tier_id.id)  # FIXED: tier_id
+                ('tier_id', '=', self.order_id.price_tier_id.id)
             ], limit=1)
             
             if product_price:
                 self.price_unit = product_price.price
-                _logger.info(
-                    f"✅ Auto-set price for {self.product_id.name}: "
-                    f"Rp {product_price.price:,.0f}"
-                )
+                _logger.info(f"✅ Auto-set price for {self.product_id.name}: Rp {product_price.price:,.0f}")
             else:
-                _logger.warning(
-                    f"⚠️ No price found for {self.product_id.name} "
-                    f"with tier {self.order_id.price_tier_id.name}"
-                )
+                _logger.warning(f"⚠️ No price found for {self.product_id.name} with tier {self.order_id.price_tier_id.name}")
+
+    @api.onchange('product_uom_qty')
+    def _onchange_qty_preserve_price(self):
+        """
+        Jangan reset harga saat qty berubah.
+        Biarkan harga tetap sesuai price tier / manual.
+        """
+        if self.order_id.price_tier_id and self.product_id:
+            product_price = self.env['twh.product.price'].search([
+                ('product_id', '=', self.product_id.id),
+                ('tier_id', '=', self.order_id.price_tier_id.id)
+            ], limit=1)
+            if product_price:
+                self.price_unit = product_price.price
+                _logger.info(f"🔒 Preserved price for {self.product_id.name}: Rp {product_price.price:,.0f}")
+        # Kalau tidak ada price tier, biarkan harga manual tetap

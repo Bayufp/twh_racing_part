@@ -1,160 +1,59 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <odoo>
+    <!-- Action -->
+    <record id="action_twh_due_reminder" model="ir.actions.act_window">
+        <field name="name">Due Reminders</field>
+        <field name="res_model">twh.due.reminder</field>
+        <field name="view_mode">tree,form</field>
+        <field name="context">{}</field>
+    </record>
 
-    <!-- Due Reminder Tree View -->
+    <!-- Tree View -->
     <record id="view_twh_due_reminder_tree" model="ir.ui.view">
         <field name="name">twh.due.reminder.tree</field>
         <field name="model">twh.due.reminder</field>
         <field name="arch" type="xml">
-            <tree string="Due Reminders" 
-                  decoration-warning="reminder_type in ['7_days', '3_days']"
-                  decoration-danger="reminder_type in ['due_date', 'overdue']"
-                  decoration-muted="state=='dismissed'">
-                <field name="reminder_date"/>
-                <field name="reminder_type" widget="badge"/>
+            <tree string="Due Reminders">
                 <field name="invoice_name"/>
                 <field name="partner_id"/>
                 <field name="invoice_date"/>
                 <field name="due_date"/>
-                <field name="invoice_total" widget="monetary"/>
-                <field name="state" widget="badge"
-                       decoration-warning="state=='pending'"
-                       decoration-success="state=='sent'"
-                       decoration-muted="state=='dismissed'"/>
-                <button name="action_send_reminder" string="Send" type="object" 
-                        icon="fa-paper-plane" invisible="state != 'pending'"/>
-                <button name="action_dismiss" string="Dismiss" type="object" 
-                        icon="fa-times" invisible="state != 'pending'"/>
-                <field name="currency_id" column_invisible="1"/>
+                <field name="reminder_date"/>
+                <field name="days_before_due"/>
+                <field name="reminder_type"/>
+                <field name="invoice_total"/>
+                <field name="state"/>
             </tree>
         </field>
     </record>
 
-    <!-- Due Reminder Form View -->
+    <!-- Form View -->
     <record id="view_twh_due_reminder_form" model="ir.ui.view">
         <field name="name">twh.due.reminder.form</field>
         <field name="model">twh.due.reminder</field>
         <field name="arch" type="xml">
             <form string="Due Reminder">
-                <header>
-                    <button name="action_send_reminder" string="Send Reminder" 
-                            type="object" class="oe_highlight" 
-                            invisible="state != 'pending'"/>
-                    <button name="action_dismiss" string="Dismiss" type="object" 
-                            invisible="state != 'pending'"/>
-                    <field name="state" widget="statusbar"/>
-                </header>
-                <sheet>
-                    <div class="oe_button_box" name="button_box">
-                        <button name="%(action_twh_invoice)d" 
-                                type="action" 
-                                class="oe_stat_button" 
-                                icon="fa-file-text-o"
-                                context="{'search_default_name': invoice_name}">
-                            <div class="o_stat_info">
-                                <span class="o_stat_text">View</span>
-                                <span class="o_stat_text">Invoice</span>
-                            </div>
-                        </button>
-                    </div>
-                    
-                    <div class="oe_title">
-                        <h1>
-                            <field name="invoice_name" readonly="1"/>
-                        </h1>
-                    </div>
-                    
+                <sheet> 
+                    <group> 
+                        <field name="invoice_id"/>
+                        <field name="partner_id" readonly="1"/>
+                        <field name="invoice_date" readonly="1"/>
+                        <field name="due_date" readonly="1"/>
+                        <field name="invoice_total" readonly="1"/>
+                    </group>
                     <group>
-                        <group>
-                            <field name="invoice_id" readonly="1"/>
-                            <field name="partner_id" readonly="1"/>
-                            <field name="invoice_date" readonly="1"/>
-                            <field name="due_date" readonly="1"/>
-                        </group>
-                        <group>
-                            <field name="reminder_type" readonly="1"/>
-                            <field name="reminder_date" readonly="1"/>
-                            <field name="days_before_due" readonly="1"/>
-                            <field name="invoice_total" widget="monetary" readonly="1"/>
-                            <field name="currency_id" invisible="1"/>
-                        </group>
+                        <field name="reminder_date"/>
+                        <field name="days_before_due"/>
+                        <field name="reminder_type"/>
+                        <field name="state"/>
                     </group>
-                    
-                    <group string="Reminder Message">
+                    <group>
                         <field name="message" readonly="1" nolabel="1"/>
-                    </group>
-                    
-                    <group string="Status Info" invisible="state == 'pending'">
-                        <group>
-                            <field name="sent_date" readonly="1"/>
-                            <field name="sent_by_id" readonly="1"/>
-                        </group>
-                        <group>
-                            <field name="notes"/>
-                        </group>
+                        <field name="notes"/>
                     </group>
                 </sheet>
             </form>
         </field>
     </record>
 
-    <!-- Due Reminder Search View -->
-    <record id="view_twh_due_reminder_search" model="ir.ui.view">
-        <field name="name">twh.due.reminder.search</field>
-        <field name="model">twh.due.reminder</field>
-        <field name="arch" type="xml">
-            <search string="Search Reminders">
-                <field name="invoice_name" string="Invoice"/>
-                <field name="partner_id" string="Customer"/>
-                <separator/>
-                <filter string="Pending" name="pending" domain="[('state', '=', 'pending')]"/>
-                <filter string="Sent" name="sent" domain="[('state', '=', 'sent')]"/>
-                <filter string="Dismissed" name="dismissed" domain="[('state', '=', 'dismissed')]"/>
-                <separator/>
-                <filter string="7 Days Before" name="7_days" domain="[('reminder_type', '=', '7_days')]"/>
-                <filter string="3 Days Before" name="3_days" domain="[('reminder_type', '=', '3_days')]"/>
-                <filter string="Due Date" name="due_date" domain="[('reminder_type', '=', 'due_date')]"/>
-                <filter string="Overdue" name="overdue" domain="[('reminder_type', '=', 'overdue')]"/>
-                <separator/>
-                <filter string="Today" name="today" 
-                        domain="[('reminder_date', '=', context_today().strftime('%Y-%m-%d'))]"/>
-                <group expand="0" string="Group By">
-                    <filter string="Reminder Type" name="group_type" context="{'group_by': 'reminder_type'}"/>
-                    <filter string="Customer" name="group_partner" context="{'group_by': 'partner_id'}"/>
-                    <filter string="State" name="group_state" context="{'group_by': 'state'}"/>
-                    <filter string="Reminder Date" name="group_date" context="{'group_by': 'reminder_date'}"/>
-                </group>
-            </search>
-        </field>
-    </record>
-
-    <!-- Due Reminder Calendar View -->
-    <record id="view_twh_due_reminder_calendar" model="ir.ui.view">
-        <field name="name">twh.due.reminder.calendar</field>
-        <field name="model">twh.due.reminder</field>
-        <field name="arch" type="xml">
-            <calendar string="Due Reminders" date_start="reminder_date" color="state">
-                <field name="invoice_name"/>
-                <field name="partner_id"/>
-                <field name="reminder_type"/>
-            </calendar>
-        </field>
-    </record>
-
-    <!-- Due Reminder Action -->
-    <record id="action_twh_due_reminder" model="ir.actions.act_window">
-        <field name="name">Due Reminders</field>
-        <field name="res_model">twh.due.reminder</field>
-        <field name="view_mode">tree,form,calendar</field>
-        <field name="context">{'search_default_pending': 1}</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                No due reminders yet
-            </p>
-            <p>
-                Reminders are automatically created by the system based on invoice due dates.
-            </p>
-        </field>
-    </record>
-
-</odoo>
+</odoo> 
