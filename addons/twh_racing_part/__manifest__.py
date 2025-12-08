@@ -66,22 +66,21 @@
     ],
 
     'assets': {
-        # JS khusus backend
-        'web.assets_backend': [
-            'twh_racing_part/static/lib/apexcharts/apexcharts.min.js',
-            'twh_racing_part/static/lib/apexcharts/apexcharts.css',
+    'web.assets_backend': [
+        # Library ApexCharts
+        'twh_racing_part/static/lib/apexcharts/apexcharts.min.js',
+        'twh_racing_part/static/lib/apexcharts/apexcharts.css',
 
-        # CSS & JS
-            'twh_racing_part/static/src/css/twh_dashboard.css',
-            'twh_racing_part/static/src/js/twh_dashboard.js',
-            
-            
-        # XML template
-            'twh_racing_part/static/src/xml/dashboard_template.xml',
-        ],
+        # CSS
+        'twh_racing_part/static/src/css/twh_dashboard.css',
 
-        
-    },
+        # JS
+        'twh_racing_part/static/src/js/twh_dashboard.js',
+
+        # XML Template
+        'twh_racing_part/static/src/xml/dashboard_template.xml',
+    ],
+},
 
     'images': ['static/description/icon.png'],
     'installable': True,
