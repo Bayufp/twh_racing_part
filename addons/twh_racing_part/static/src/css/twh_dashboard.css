@@ -72,6 +72,16 @@
   font-size: 1.5rem;
 }
 
+/* NEW: Subtitle untuk card */
+.twh-stat-subtitle {
+  color: #ffffff !important;
+  opacity: 0.75;
+  font-size: 0.65rem;
+  margin: 5px 0 0 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  font-weight: 400;
+}
+
 .twh-stat-icon i {
   color: #ffffff !important;
 }
@@ -127,6 +137,10 @@
   .twh-stat-content {
     padding: 1.25rem;
   }
+
+  .twh-stat-subtitle {
+    font-size: 0.6rem;
+  }
 }
 
 @media (max-width: 576px) {
@@ -136,6 +150,10 @@
 
   .twh-stat-label {
     font-size: 0.65rem;
+  }
+
+  .twh-stat-subtitle {
+    font-size: 0.55rem;
   }
 }
 

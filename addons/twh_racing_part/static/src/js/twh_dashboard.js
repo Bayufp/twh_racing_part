@@ -18,7 +18,8 @@ export class TwhDashboard extends Component {
     this.state = useState({
       total_products: 0,
       total_customers: 0,
-      pending_invoices: 0,
+      unpaid_invoices: 0,
+      total_revenue: "Rp 0",
       monthly_sales: [],
     });
 
@@ -41,12 +42,23 @@ export class TwhDashboard extends Component {
         ["active", "=", true],
       ]);
 
-      // Hitung pending invoices (yang belum lunas)
-      this.state.pending_invoices = await this.orm.searchCount("account.move", [
-        ["move_type", "=", "out_invoice"],
-        ["state", "=", "posted"],
-        ["payment_state", "in", ["not_paid", "partial"]],
+      // Hitung unpaid invoices dari twh.invoice (confirmed tapi belum paid)
+      this.state.unpaid_invoices = await this.orm.searchCount("twh.invoice", [
+        ["state", "=", "confirmed"],
       ]);
+
+      // Hitung Total Revenue (hanya invoice yang paid)
+      const paidInvoices = await this.orm.searchRead(
+        "twh.invoice",
+        [["state", "=", "paid"]],
+        ["total"]
+      );
+
+      const totalRevenue = paidInvoices.reduce(
+        (sum, inv) => sum + inv.total,
+        0
+      );
+      this.state.total_revenue = "Rp " + totalRevenue.toLocaleString("id-ID");
 
       // Ambil data penjualan REAL dari RPC
       const salesData = await this.rpc("/twh/dashboard/sales_data", {});

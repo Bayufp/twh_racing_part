@@ -42,13 +42,14 @@
                     </div>
                 </div>
                 
-                <!-- Card 3 - Pending Invoices -->
+                <!-- Card 3 - Unpaid Invoices (CHANGED FROM PENDING) -->
                 <div class="col-12 col-md-6 col-lg-3 mb-3">
                     <div class="twh-stat-card twh-card-blue">
                         <div class="twh-stat-content">
                             <div class="twh-stat-info">
-                                <h6 class="twh-stat-label">PENDING INVOICES</h6>
-                                <h2 class="twh-stat-value"><t t-esc="state.pending_invoices or 0"/></h2>
+                                <h6 class="twh-stat-label">UNPAID INVOICES</h6>
+                                <h2 class="twh-stat-value"><t t-esc="state.unpaid_invoices or 0"/></h2>
+                                <p class="twh-stat-subtitle">Confirmed but not paid</p>
                             </div>
                             <div class="twh-stat-icon">
                                 <i class="fa fa-file-text-o"/>

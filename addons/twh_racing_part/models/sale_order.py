@@ -146,4 +146,4 @@ class SaleOrderLine(models.Model):
             if product_price:
                 self.price_unit = product_price.price
                 _logger.info(f"🔒 Preserved price for {self.product_id.name}: Rp {product_price.price:,.0f}")
-        # Kalau tidak ada price tier, biarkan harga manual tetap
+        

@@ -79,6 +79,21 @@ class TwhDashboard(models.TransientModel):
         Get summary statistics untuk dashboard
         """
         try:
+            # Count confirmed TWH invoices yang belum lunas
+            unpaid_invoices = self.env['twh.invoice'].search_count([
+                ('state', '=', 'confirmed'),
+            ])
+            
+            # Calculate Total Revenue (hanya invoice yang paid)
+            paid_invoices = self.env['twh.invoice'].search([
+                ('state', '=', 'paid'),  # Hanya yang sudah paid
+            ])
+            
+            total_revenue = sum(paid_invoices.mapped('total'))
+            
+            # Format currency Indonesia
+            total_revenue_formatted = 'Rp {:,.0f}'.format(total_revenue).replace(',', '.')
+            
             summary = {
                 'total_products': self.env['product.product'].search_count([
                     ('sale_ok', '=', True),
@@ -88,11 +103,8 @@ class TwhDashboard(models.TransientModel):
                     ('customer_rank', '>', 0),
                     ('active', '=', True)
                 ]),
-                'pending_invoices': self.env['account.move'].search_count([
-                    ('move_type', '=', 'out_invoice'),
-                    ('state', '=', 'posted'),
-                    ('payment_state', 'in', ['not_paid', 'partial'])
-                ]),
+                'unpaid_invoices': unpaid_invoices,
+                'total_revenue': total_revenue_formatted,
                 'monthly_sales': self.get_sales_data()
             }
             
@@ -100,7 +112,8 @@ class TwhDashboard(models.TransientModel):
                 f"📈 Dashboard Summary: "
                 f"{summary['total_products']} products, "
                 f"{summary['total_customers']} customers, "
-                f"{summary['pending_invoices']} pending invoices"
+                f"{summary['unpaid_invoices']} unpaid invoices"
+                f"Revenue: {summary['total_revenue']}"
             )
             
             return summary
@@ -110,6 +123,7 @@ class TwhDashboard(models.TransientModel):
             return {
                 'total_products': 0,
                 'total_customers': 0,
-                'pending_invoices': 0,
+                'unpaid_invoices': 0,
+                'total_revenue': 'Rp 0',
                 'monthly_sales': []
             }
