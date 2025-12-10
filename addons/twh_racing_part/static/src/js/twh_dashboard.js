@@ -20,6 +20,9 @@ export class TwhDashboard extends Component {
       total_customers: 0,
       unpaid_invoices: 0,
       total_revenue: "Rp 0",
+      revenue_period: "month", // Default: This Month
+      revenue_period_label: "This Month",
+      revenue_invoice_count: 0,
       monthly_sales: [],
     });
 
@@ -28,7 +31,7 @@ export class TwhDashboard extends Component {
     });
   }
 
-  async loadDashboardData() {
+  async loadDashboardData(revenuePeriod = "month") {
     try {
       // Hitung total products
       this.state.total_products = await this.orm.searchCount(
@@ -47,18 +50,18 @@ export class TwhDashboard extends Component {
         ["state", "=", "confirmed"],
       ]);
 
-      // Hitung Total Revenue (hanya invoice yang paid)
-      const paidInvoices = await this.orm.searchRead(
-        "twh.invoice",
-        [["state", "=", "paid"]],
-        ["total"]
+      // Get Revenue Data with Period Filter
+      const revenueData = await this.orm.call(
+        "twh.dashboard",
+        "get_total_revenue",
+        [revenuePeriod]
       );
 
-      const totalRevenue = paidInvoices.reduce(
-        (sum, inv) => sum + inv.total,
-        0
-      );
-      this.state.total_revenue = "Rp " + totalRevenue.toLocaleString("id-ID");
+      this.state.total_revenue = revenueData.formatted || "Rp 0";
+      this.state.revenue_period = revenueData.period || "month";
+      this.state.revenue_period_label =
+        revenueData.period_label || "This Month";
+      this.state.revenue_invoice_count = revenueData.invoice_count || 0;
 
       // Ambil data penjualan REAL dari RPC
       const salesData = await this.rpc("/twh/dashboard/sales_data", {});
@@ -66,8 +69,43 @@ export class TwhDashboard extends Component {
 
       // Render chart setelah DOM ready
       setTimeout(() => this.renderCharts(), 100);
+
+      console.log("✅ Dashboard loaded:", {
+        revenue: this.state.total_revenue,
+        period: this.state.revenue_period_label,
+        invoices: this.state.revenue_invoice_count,
+      });
     } catch (error) {
       console.error("Failed to load dashboard data:", error);
+    }
+  }
+
+  // NEW: Handle Revenue Period Change
+  async onRevenuePeriodChange(event) {
+    const newPeriod = event.target.value;
+    console.log("📅 Changing revenue period to:", newPeriod);
+
+    // Reload hanya revenue data
+    try {
+      const revenueData = await this.orm.call(
+        "twh.dashboard",
+        "get_total_revenue",
+        [newPeriod]
+      );
+
+      this.state.total_revenue = revenueData.formatted || "Rp 0";
+      this.state.revenue_period = revenueData.period || "month";
+      this.state.revenue_period_label =
+        revenueData.period_label || "This Month";
+      this.state.revenue_invoice_count = revenueData.invoice_count || 0;
+
+      console.log("✅ Revenue updated:", {
+        period: this.state.revenue_period_label,
+        amount: this.state.total_revenue,
+        invoices: this.state.revenue_invoice_count,
+      });
+    } catch (error) {
+      console.error("Failed to update revenue:", error);
     }
   }
 
@@ -153,7 +191,7 @@ export class TwhDashboard extends Component {
 
   // Method untuk refresh data
   async refreshDashboard() {
-    await this.loadDashboardData();
+    await this.loadDashboardData(this.state.revenue_period);
   }
 }
 

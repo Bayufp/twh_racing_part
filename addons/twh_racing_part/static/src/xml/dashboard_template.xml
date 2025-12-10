@@ -42,7 +42,7 @@
                     </div>
                 </div>
                 
-                <!-- Card 3 - Unpaid Invoices (CHANGED FROM PENDING) -->
+                <!-- Card 3 - Unpaid Invoices -->
                 <div class="col-12 col-md-6 col-lg-3 mb-3">
                     <div class="twh-stat-card twh-card-blue">
                         <div class="twh-stat-content">
@@ -58,13 +58,26 @@
                     </div>
                 </div>
 
-                <!-- Card 4 - Total Revenue -->
+                <!-- Card 4 - Total Revenue (WITH FILTER) -->
                 <div class="col-12 col-md-6 col-lg-3 mb-3">
                     <div class="twh-stat-card twh-card-cyan">
                         <div class="twh-stat-content">
                             <div class="twh-stat-info">
-                                <h6 class="twh-stat-label">TOTAL REVENUE</h6>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="twh-stat-label mb-0">TOTAL REVENUE</h6>
+                                    <!-- Period Filter Dropdown -->
+                                    <select class="twh-period-filter" t-on-change="onRevenuePeriodChange">
+                                        <option value="month" t-att-selected="state.revenue_period === 'month'">This Month</option>
+                                        <option value="year" t-att-selected="state.revenue_period === 'year'">This Year</option>
+                                        <option value="all" t-att-selected="state.revenue_period === 'all'">All Time</option>
+                                    </select>
+                                </div>
                                 <h2 class="twh-stat-value twh-stat-revenue"><t t-esc="state.total_revenue or 'Rp 0'"/></h2>
+                                <p class="twh-stat-subtitle">
+                                    <i class="fa fa-calendar"/> <t t-esc="state.revenue_period_label"/>
+                                    <span style="margin-left: 8px;">•</span>
+                                    <t t-esc="state.revenue_invoice_count"/> invoices
+                                </p>
                             </div>
                             <div class="twh-stat-icon">
                                 <i class="fa fa-money"/>

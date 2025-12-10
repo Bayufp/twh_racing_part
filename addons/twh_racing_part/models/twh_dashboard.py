@@ -74,9 +74,84 @@ class TwhDashboard(models.TransientModel):
             return []
 
     @api.model
-    def get_dashboard_summary(self):
+    def get_total_revenue(self, period='month'):
+        """
+        Calculate total revenue based on period
+        
+        Args:
+            period (str): 'month', 'year', or 'all'
+        
+        Returns:
+            dict: {
+                'amount': float,
+                'formatted': str,
+                'period_label': str,
+                'invoice_count': int
+            }
+        """
+        try:
+            today = datetime.now()
+            domain = [('state', '=', 'paid')]
+            
+            # Tentukan date range berdasarkan period
+            if period == 'month':
+                # This month
+                month_start = today.replace(day=1)
+                domain.append(('date_invoice', '>=', fields.Date.to_string(month_start)))
+                domain.append(('date_invoice', '<=', fields.Date.to_string(today)))
+                period_label = f"{today.strftime('%B %Y')}"
+                
+            elif period == 'year':
+                # This year
+                year_start = today.replace(month=1, day=1)
+                domain.append(('date_invoice', '>=', fields.Date.to_string(year_start)))
+                domain.append(('date_invoice', '<=', fields.Date.to_string(today)))
+                period_label = f"Year {today.year}"
+                
+            else:  # 'all'
+                # All time - no date filter
+                period_label = "All Time"
+            
+            # Search paid invoices
+            paid_invoices = self.env['twh.invoice'].search(domain)
+            
+            # Calculate total
+            total_amount = sum(paid_invoices.mapped('total'))
+            invoice_count = len(paid_invoices)
+            
+            # Format currency
+            formatted = 'Rp {:,.0f}'.format(total_amount).replace(',', '.')
+            
+            _logger.info(
+                f"💰 Revenue ({period}): {formatted} "
+                f"from {invoice_count} invoices ({period_label})"
+            )
+            
+            return {
+                'amount': total_amount,
+                'formatted': formatted,
+                'period_label': period_label,
+                'invoice_count': invoice_count,
+                'period': period
+            }
+            
+        except Exception as e:
+            _logger.error(f"❌ Error calculating revenue: {str(e)}")
+            return {
+                'amount': 0,
+                'formatted': 'Rp 0',
+                'period_label': 'Error',
+                'invoice_count': 0,
+                'period': period
+            }
+
+    @api.model
+    def get_dashboard_summary(self, revenue_period='month'):
         """
         Get summary statistics untuk dashboard
+        
+        Args:
+            revenue_period (str): 'month', 'year', or 'all'
         """
         try:
             # Count confirmed TWH invoices yang belum lunas
@@ -84,15 +159,8 @@ class TwhDashboard(models.TransientModel):
                 ('state', '=', 'confirmed'),
             ])
             
-            # Calculate Total Revenue (hanya invoice yang paid)
-            paid_invoices = self.env['twh.invoice'].search([
-                ('state', '=', 'paid'),  # Hanya yang sudah paid
-            ])
-            
-            total_revenue = sum(paid_invoices.mapped('total'))
-            
-            # Format currency Indonesia
-            total_revenue_formatted = 'Rp {:,.0f}'.format(total_revenue).replace(',', '.')
+            # Get revenue data with period
+            revenue_data = self.get_total_revenue(revenue_period)
             
             summary = {
                 'total_products': self.env['product.product'].search_count([
@@ -104,7 +172,10 @@ class TwhDashboard(models.TransientModel):
                     ('active', '=', True)
                 ]),
                 'unpaid_invoices': unpaid_invoices,
-                'total_revenue': total_revenue_formatted,
+                'total_revenue': revenue_data['formatted'],
+                'revenue_period': revenue_data['period'],
+                'revenue_period_label': revenue_data['period_label'],
+                'revenue_invoice_count': revenue_data['invoice_count'],
                 'monthly_sales': self.get_sales_data()
             }
             
@@ -112,8 +183,8 @@ class TwhDashboard(models.TransientModel):
                 f"📈 Dashboard Summary: "
                 f"{summary['total_products']} products, "
                 f"{summary['total_customers']} customers, "
-                f"{summary['unpaid_invoices']} unpaid invoices"
-                f"Revenue: {summary['total_revenue']}"
+                f"{summary['unpaid_invoices']} unpaid invoices, "
+                f"Revenue: {summary['total_revenue']} ({summary['revenue_period_label']})"
             )
             
             return summary
@@ -125,5 +196,8 @@ class TwhDashboard(models.TransientModel):
                 'total_customers': 0,
                 'unpaid_invoices': 0,
                 'total_revenue': 'Rp 0',
+                'revenue_period': 'month',
+                'revenue_period_label': 'This Month',
+                'revenue_invoice_count': 0,
                 'monthly_sales': []
             }

@@ -174,3 +174,43 @@
 .twh-stat-icon i {
   display: inline-block;
 }
+
+/* Period Filter Dropdown Style */
+.twh-period-filter {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.twh-period-filter:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.twh-period-filter:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
+}
+
+.twh-period-filter option {
+  background: #4facfe;
+  color: #ffffff;
+  padding: 8px;
+}
+
+/* Responsive untuk filter */
+@media (max-width: 768px) {
+  .twh-period-filter {
+    font-size: 0.6rem;
+    padding: 3px 6px;
+  }
+}
