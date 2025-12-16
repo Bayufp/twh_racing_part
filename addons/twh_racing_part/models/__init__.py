@@ -8,3 +8,4 @@ from . import product_analytics
 from . import res_partner
 from . import twh_dashboard
 from . import sale_order
+from . import twh_payment  

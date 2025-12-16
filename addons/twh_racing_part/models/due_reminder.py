@@ -9,6 +9,7 @@ _logger = logging.getLogger(__name__)
 class TwhDueReminder(models.Model):
     """
     Model untuk tracking reminder jatuh tempo invoice
+    HANYA untuk invoice TEMPO (bukan cash)
     """
     _name = 'twh.due.reminder'
     _description = 'TWH Due Date Reminder'
@@ -53,8 +54,11 @@ class TwhDueReminder(models.Model):
     message = fields.Text(string='Reminder Message', compute='_compute_message')
     notes = fields.Text(string='Notes')
 
-    # Invoice Amount
+    # Invoice Amount (NEW - track payment progress)
     invoice_total = fields.Monetary(related='invoice_id.total', string='Invoice Total')
+    paid_amount = fields.Monetary(related='invoice_id.paid_amount', string='Paid Amount')
+    remaining_amount = fields.Monetary(related='invoice_id.remaining_amount', string='Remaining Amount')
+    payment_progress = fields.Float(related='invoice_id.payment_progress', string='Payment Progress (%)')
     currency_id = fields.Many2one(related='invoice_id.currency_id', string='Currency')
 
     # Constraint unik: tidak boleh ada reminder ganda untuk invoice + tipe + tanggal
@@ -77,51 +81,63 @@ class TwhDueReminder(models.Model):
             customer_name = invoice.partner_id.name or ''
             invoice_number = invoice.name or ''
             due_date_str = invoice.date_due.strftime('%d %B %Y') if invoice.date_due else ''
-            amount = '{:,.0f}'.format(invoice.total or 0)
+            
+            # Format amounts
+            total_amount = '{:,.0f}'.format(invoice.total or 0)
+            paid_amount = '{:,.0f}'.format(invoice.paid_amount or 0)
+            remaining_amount = '{:,.0f}'.format(invoice.remaining_amount or 0)
+            progress = round(invoice.payment_progress or 0, 1)
+
+            # Payment info string (hanya tampil jika ada cicilan)
+            payment_info = ""
+            if invoice.paid_amount > 0:
+                payment_info = f"\nSudah Dibayar: Rp {paid_amount} ({progress}%)\nSisa: Rp {remaining_amount}"
+            else:
+                payment_info = f"\nTotal: Rp {total_amount}\nBelum ada pembayaran"
 
             if reminder.reminder_type == 'daily':
                 reminder.message = f"""
-            PENGINGAT HARIAN: Invoice {invoice_number} akan jatuh tempo dalam {max(reminder.days_before_due, 0)} hari.
+PENGINGAT HARIAN: Invoice {invoice_number} akan jatuh tempo dalam {max(reminder.days_before_due, 0)} hari.
 
-            Customer: {customer_name}
-            Tanggal Jatuh Tempo: {due_date_str}
-            Total: Rp {amount}
+Customer: {customer_name}
+Tanggal Jatuh Tempo: {due_date_str}{payment_info}
             """.strip()
+            
             elif reminder.reminder_type == '7_days':
                 reminder.message = f"""
-            PENGINGAT: Invoice {invoice_number} akan jatuh tempo dalam 7 hari!
+PENGINGAT: Invoice {invoice_number} akan jatuh tempo dalam 7 hari!
 
-            Customer: {customer_name}
-            Tanggal Jatuh Tempo: {due_date_str}
-            Total: Rp {amount}
+Customer: {customer_name}
+Tanggal Jatuh Tempo: {due_date_str}{payment_info}
             """.strip()
+            
             elif reminder.reminder_type == '3_days':
                 reminder.message = f"""
-            PERINGATAN: Invoice {invoice_number} akan jatuh tempo dalam 3 hari!
+PERINGATAN: Invoice {invoice_number} akan jatuh tempo dalam 3 hari!
 
-            Customer: {customer_name}
-            Tanggal Jatuh Tempo: {due_date_str}
-            Total: Rp {amount}
+Customer: {customer_name}
+Tanggal Jatuh Tempo: {due_date_str}{payment_info}
             """.strip()
+            
             elif reminder.reminder_type == 'due_date':
                 reminder.message = f"""
-            JATUH TEMPO HARI INI: Invoice {invoice_number}
+JATUH TEMPO HARI INI: Invoice {invoice_number}
 
-            Customer: {customer_name}
-            Tanggal Jatuh Tempo: {due_date_str}
-            Total: Rp {amount}
+Customer: {customer_name}
+Tanggal Jatuh Tempo: {due_date_str}{payment_info}
             """.strip()
+            
             else:  # overdue
                 days_overdue = 0
                 if invoice.date_due:
                     days_overdue = (fields.Date.today() - invoice.date_due).days
                 reminder.message = f"""
-            TERLAMBAT {days_overdue} HARI: Invoice {invoice_number}
+⚠️ TERLAMBAT {days_overdue} HARI: Invoice {invoice_number}
 
-            Customer: {customer_name}
-            Tanggal Jatuh Tempo: {due_date_str}
-            Total: Rp {amount}
-            SEGERA LAKUKAN PENAGIHAN!
+Customer: {customer_name}
+Tanggal Jatuh Tempo: {due_date_str}{payment_info}
+
+SEGERA LAKUKAN PENAGIHAN!
             """.strip()
 
     def action_send_reminder(self):
@@ -165,15 +181,24 @@ class TwhDueReminder(models.Model):
         """
         Cron job untuk create reminders otomatis
         Jalan setiap hari
+        
+        PENTING: 
+        - Hanya track invoice TEMPO (bukan cash)
+        - Hanya track invoice yang belum lunas (confirmed, partial, overdue)
+        - Mulai tracking dari 14 hari sebelum due date
         """
         _logger.info('Running cron: Create due date reminders')
 
         today = fields.Date.today()
 
+        # HANYA invoice TEMPO yang belum lunas
         invoices = self.env['twh.invoice'].search([
-            ('state', 'in', ['confirmed']),
+            ('payment_type', '=', 'tempo'),  # ← BARU: Hanya tempo
+            ('state', 'in', ['confirmed', 'partial', 'overdue']),  # ← BARU: Termasuk partial
             ('date_due', '!=', False),
         ])
+
+        _logger.info(f'Found {len(invoices)} tempo invoices to check for reminders')
 
         for invoice in invoices:
             due_date = invoice.date_due
@@ -196,7 +221,10 @@ class TwhDueReminder(models.Model):
                         'reminder_type': 'overdue',
                         'days_before_due': days_until_due,
                     })
-                    invoice.write({'state': 'overdue'}) 
+                    # Update invoice state to overdue
+                    if invoice.state != 'overdue':
+                        invoice.write({'state': 'overdue'})
+                    _logger.info(f'Created overdue reminder for invoice {invoice.name}')
                 continue
 
             # Daily reminder mulai 14 hari sebelum due
@@ -257,3 +285,23 @@ class TwhDueReminder(models.Model):
                 _logger.error(f'Failed to send reminder {reminder.id}: {str(e)}')
 
         _logger.info(f'Cron completed: Sent {len(reminders)} reminders')
+    
+    @api.model
+    def _cron_cleanup_paid_invoices(self):
+        """
+        Cron job untuk cleanup reminders dari invoice yang sudah paid
+        Jalan setiap hari
+        """
+        _logger.info('Running cron: Cleanup reminders for paid invoices')
+        
+        # Cari reminders dari invoice yang sudah paid
+        paid_reminders = self.search([
+            ('invoice_id.state', '=', 'paid'),
+            ('state', '=', 'pending'),
+        ])
+        
+        if paid_reminders:
+            paid_reminders.write({'state': 'dismissed'})
+            _logger.info(f'Dismissed {len(paid_reminders)} reminders for paid invoices')
+        
+        _logger.info('Cron completed: Cleanup reminders')

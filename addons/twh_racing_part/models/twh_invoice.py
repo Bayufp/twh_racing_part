@@ -50,7 +50,7 @@ class TwhInvoice(models.Model):
         ('dealer', 'Dealer'),
     ], string='Price Tier', required=True, default='price_a', tracking=True)
     
-    # Link to Sales Order (NEW)
+    # Link to Sales Order
     sale_order_id = fields.Many2one(
         'sale.order',
         string='Sales Order',
@@ -98,6 +98,48 @@ class TwhInvoice(models.Model):
         default=lambda self: self.env.company.currency_id
     )
     
+    # ========== PAYMENT FIELDS (NEW) ==========
+    payment_type = fields.Selection([
+        ('cash', 'Cash'),
+        ('tempo', 'Tempo'),
+    ], string='Payment Type', required=True, default='tempo', tracking=True,
+       help='Cash: Bayar langsung, Tempo: Bayar dengan jatuh tempo')
+    
+    payment_ids = fields.One2many(
+        'twh.payment',
+        'invoice_id',
+        string='Payment History'
+    )
+    
+    paid_amount = fields.Monetary(
+        string='Paid Amount',
+        compute='_compute_payment_status',
+        store=True,
+        currency_field='currency_id',
+        help='Total amount yang sudah dibayar'
+    )
+    
+    remaining_amount = fields.Monetary(
+        string='Remaining Amount',
+        compute='_compute_payment_status',
+        store=True,
+        currency_field='currency_id',
+        help='Sisa yang harus dibayar'
+    )
+    
+    payment_progress = fields.Float(
+        string='Payment Progress (%)',
+        compute='_compute_payment_status',
+        store=True,
+        help='Persentase pembayaran'
+    )
+    
+    payment_count = fields.Integer(
+        string='Payment Count',
+        compute='_compute_payment_count'
+    )
+    # ==========================================
+    
     # Payment Terms
     payment_term_days = fields.Integer(
         string='Payment Terms (Days)', 
@@ -115,6 +157,7 @@ class TwhInvoice(models.Model):
     state = fields.Selection([
         ('draft', 'Draft'),
         ('confirmed', 'Confirmed'),
+        ('partial', 'Partial Payment'),  # ← NEW
         ('paid', 'Paid'),
         ('overdue', 'Overdue'),
         ('cancelled', 'Cancelled'),
@@ -162,10 +205,46 @@ class TwhInvoice(models.Model):
                 'total': total,
             })
     
-    @api.depends('date_invoice', 'payment_term_days')
+    # ========== PAYMENT COMPUTATION (NEW) ==========
+    @api.depends('payment_ids', 'payment_ids.amount', 'payment_ids.state', 'total')
+    def _compute_payment_status(self):
+        for invoice in self:
+            # Calculate total paid from confirmed payments
+            confirmed_payments = invoice.payment_ids.filtered(lambda p: p.state == 'confirmed')
+            paid_amount = sum(confirmed_payments.mapped('amount'))
+            remaining_amount = invoice.total - paid_amount
+            
+            # Calculate progress
+            if invoice.total > 0:
+                progress = (paid_amount / invoice.total) * 100
+            else:
+                progress = 0.0
+            
+            invoice.update({
+                'paid_amount': paid_amount,
+                'remaining_amount': remaining_amount,
+                'payment_progress': progress,
+            })
+            
+            # Auto-update state based on payment
+            if invoice.state in ['confirmed', 'partial', 'overdue']:
+                if remaining_amount <= 0:
+                    invoice.state = 'paid'
+                elif paid_amount > 0:
+                    invoice.state = 'partial'
+    
+    @api.depends('payment_ids')
+    def _compute_payment_count(self):
+        for invoice in self:
+            invoice.payment_count = len(invoice.payment_ids.filtered(lambda p: p.state == 'confirmed'))
+    # ===============================================
+    
+    @api.depends('date_invoice', 'payment_term_days', 'payment_type')
     def _compute_due_date(self):
         for invoice in self:
-            if invoice.date_invoice and invoice.payment_term_days:
+            if invoice.payment_type == 'cash':
+                invoice.date_due = False
+            elif invoice.date_invoice and invoice.payment_term_days:
                 invoice.date_due = invoice.date_invoice + timedelta(days=invoice.payment_term_days)
             else:
                 invoice.date_due = False
@@ -186,6 +265,17 @@ class TwhInvoice(models.Model):
             
             invoice.write({'state': 'confirmed'})
             invoice._create_commission()
+            
+            # If payment type is cash, auto-create full payment
+            if invoice.payment_type == 'cash':
+                self.env['twh.payment'].create({
+                    'invoice_id': invoice.id,
+                    'payment_date': invoice.date_invoice,
+                    'amount': invoice.total,
+                    'payment_method': 'cash',
+                    'note': 'Cash payment - paid on invoice date',
+                })
+            
             invoice.message_post(body=_('Invoice confirmed'))
     
     def action_mark_paid(self):
@@ -200,6 +290,8 @@ class TwhInvoice(models.Model):
             invoice.write({'state': 'cancelled'})
             # Delete commissions
             invoice.commission_ids.unlink()
+            # Delete payments
+            invoice.payment_ids.unlink()
             invoice.message_post(body=_('Invoice cancelled'))
     
     def action_set_to_draft(self):
@@ -208,10 +300,45 @@ class TwhInvoice(models.Model):
             invoice.write({'state': 'draft'})
             invoice.message_post(body=_('Invoice set to draft'))
     
+    # ========== PAYMENT ACTIONS (NEW) ==========
+    def action_add_payment(self):
+        """Open wizard to add payment"""
+        self.ensure_one()
+        
+        if self.state not in ['confirmed', 'partial', 'overdue']:
+            raise UserError(_('Can only add payment to confirmed invoices!'))
+        
+        if self.remaining_amount <= 0:
+            raise UserError(_('Invoice is already fully paid!'))
+        
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Record Payment',
+            'res_model': 'twh.payment',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_invoice_id': self.id,
+                'default_amount': self.remaining_amount,
+            }
+        }
+    
+    def action_view_payments(self):
+        """View all payments for this invoice"""
+        self.ensure_one()
+        
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Payment History',
+            'res_model': 'twh.payment',
+            'view_mode': 'tree,form',
+            'domain': [('invoice_id', '=', self.id)],
+            'context': {'default_invoice_id': self.id}
+        }
+    # ===========================================
+    
     def action_view_sale_order(self):
-        """
-        View Sales Order yang generate invoice ini (NEW)
-        """
+        """View Sales Order yang generate invoice ini"""
         self.ensure_one()
         
         if not self.sale_order_id:
@@ -260,6 +387,12 @@ class TwhInvoice(models.Model):
         """Auto-fill discount if partner has special discount"""
         if self.partner_id and self.partner_id.twh_discount_percent > 0:
             self.discount_percent = self.partner_id.twh_discount_percent
+    
+    @api.onchange('payment_type')
+    def _onchange_payment_type(self):
+        """Reset due date if payment type is cash"""
+        if self.payment_type == 'cash':
+            self.payment_term_days = 0
     
     def action_print_invoice(self):
         """Print invoice report"""

@@ -5,6 +5,9 @@ access_twh_invoice_manager,twh.invoice.manager,model_twh_invoice,group_twh_manag
 access_twh_invoice_line_user,twh.invoice.line.user,model_twh_invoice_line,group_twh_user,1,0,0,0
 access_twh_invoice_line_sales,twh.invoice.line.sales,model_twh_invoice_line,group_twh_sales,1,1,1,0
 access_twh_invoice_line_manager,twh.invoice.line.manager,model_twh_invoice_line,group_twh_manager,1,1,1,1
+access_twh_payment_user,twh.payment.user,model_twh_payment,group_twh_user,1,0,0,0
+access_twh_payment_sales,twh.payment.sales,model_twh_payment,group_twh_sales,1,1,1,0
+access_twh_payment_manager,twh.payment.manager,model_twh_payment,group_twh_manager,1,1,1,1
 access_twh_pricelist_user,twh.price.tier.user,model_twh_price_tier,group_twh_user,1,0,0,0
 access_twh_pricelist_manager,twh.price.tier.manager,model_twh_price_tier,group_twh_manager,1,1,1,1
 access_twh_product_price_user,twh.product.price.user,model_twh_product_price,group_twh_user,1,0,0,0

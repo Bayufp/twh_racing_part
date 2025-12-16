@@ -49,7 +49,17 @@
                             <div class="twh-stat-info">
                                 <h6 class="twh-stat-label">UNPAID INVOICES</h6>
                                 <h2 class="twh-stat-value"><t t-esc="state.unpaid_invoices or 0"/></h2>
-                                <p class="twh-stat-subtitle">Confirmed but not paid</p>
+                                <p class="twh-stat-subtitle">
+                                    Outstanding: <t t-esc="state.total_outstanding or 'Rp 0'"/>
+                                </p>
+                                <p class="twh-stat-subtitle" style="font-size: 11px; margin-top: -5px;">
+                                    <span t-if="state.overdue_count > 0" class="text-danger">
+                                        <i class="fa fa-exclamation-triangle"/> <t t-esc="state.overdue_count"/> Overdue
+                                    </span>
+                                    <span t-if="state.partial_count > 0" style="margin-left: 8px;" class="text-warning">
+                                        <i class="fa fa-clock-o"/> <t t-esc="state.partial_count"/> Partial
+                                    </span>
+                                </p>
                             </div>
                             <div class="twh-stat-icon">
                                 <i class="fa fa-file-text-o"/>
@@ -58,7 +68,7 @@
                     </div>
                 </div>
 
-                <!-- Card 4 - Total Revenue (WITH FILTER) -->
+                <!-- Card 4 - Total Revenue -->
                 <div class="col-12 col-md-6 col-lg-3 mb-3">
                     <div class="twh-stat-card twh-card-cyan">
                         <div class="twh-stat-content">
@@ -75,7 +85,10 @@
                                 <h2 class="twh-stat-value twh-stat-revenue"><t t-esc="state.total_revenue or 'Rp 0'"/></h2>
                                 <p class="twh-stat-subtitle">
                                     <i class="fa fa-calendar"/> <t t-esc="state.revenue_period_label"/>
-                                    <span style="margin-left: 8px;">•</span>
+                                </p>
+                                <p class="twh-stat-subtitle" style="font-size: 11px; margin-top: -5px;">
+                                    <i class="fa fa-money"/> <t t-esc="state.revenue_payment_count"/> payments 
+                                    <span style="margin: 0 4px;">•</span>
                                     <t t-esc="state.revenue_invoice_count"/> invoices
                                 </p>
                             </div>
@@ -96,12 +109,12 @@
                                 <i class="fa fa-line-chart text-primary me-2"/>
                                 Monthly Sales Trend
                             </h5>
-                            <small class="text-muted">Data penjualan 6 bulan terakhir</small>
+                            <small class="text-muted">Total penjualan (invoice created) 6 bulan terakhir</small>
                         </div>
                         <div class="card-body">
                             <div t-if="state.monthly_sales.length === 0" class="text-center py-5 text-muted">
                                 <i class="fa fa-info-circle fa-3x mb-3"/>
-                                <p>Belum ada data penjualan. Mulai buat sales order untuk melihat grafik.</p>
+                                <p>Belum ada invoice. Mulai buat invoice untuk melihat grafik penjualan.</p>
                             </div>
                             <div t-else="" id="monthly_sales" style="min-height: 350px;"/>
                         </div>

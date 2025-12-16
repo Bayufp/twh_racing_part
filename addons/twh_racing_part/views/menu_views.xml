@@ -19,6 +19,12 @@
               action="action_twh_invoice"
               sequence="10"/>
 
+    <menuitem id="menu_twh_payment"
+              name="Payment Records"
+              parent="menu_twh_operations"
+              action="action_twh_payment"
+              sequence="15"/>
+
     <menuitem id="menu_twh_products"
               name="Products"
               parent="menu_twh_operations"
@@ -49,11 +55,11 @@
               action="action_twh_commission_wizard"
               sequence="20"/>
 
-    <!-- Reminders -->
+    <!-- Due Reminders (CHANGED - now points to invoice tracking) -->
     <menuitem id="menu_twh_reminders"
               name="Due Reminders"
               parent="menu_twh_root"
-              action="action_twh_due_reminder"
+              action="action_twh_invoice_due_tracking"
               sequence="30"/>
 
     <!-- Analytics -->
@@ -92,5 +98,13 @@
               parent="menu_twh_configuration"
               action="action_twh_product_price"
               sequence="20"/>
+    
+    <!-- Reminder History (hidden, only accessible via search) -->
+    <menuitem id="menu_twh_reminder_history"
+              name="Reminder History"
+              parent="menu_twh_configuration"
+              action="action_twh_due_reminder"
+              sequence="30"
+              groups="group_twh_manager"/>
 
 </odoo>

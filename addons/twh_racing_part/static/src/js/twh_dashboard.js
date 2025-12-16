@@ -19,9 +19,13 @@ export class TwhDashboard extends Component {
       total_products: 0,
       total_customers: 0,
       unpaid_invoices: 0,
+      total_outstanding: "Rp 0",
+      overdue_count: 0,
+      partial_count: 0,
       total_revenue: "Rp 0",
-      revenue_period: "month", // Default: This Month
+      revenue_period: "month",
       revenue_period_label: "This Month",
+      revenue_payment_count: 0,
       revenue_invoice_count: 0,
       monthly_sales: [],
     });
@@ -33,39 +37,27 @@ export class TwhDashboard extends Component {
 
   async loadDashboardData(revenuePeriod = "month") {
     try {
-      // Hitung total products
-      this.state.total_products = await this.orm.searchCount(
-        "product.product",
-        [["sale_ok", "=", true]]
-      );
-
-      // Hitung total customers (hanya yang aktif)
-      this.state.total_customers = await this.orm.searchCount("res.partner", [
-        ["customer_rank", ">", 0],
-        ["active", "=", true],
-      ]);
-
-      // Hitung unpaid invoices dari twh.invoice (confirmed tapi belum paid)
-      this.state.unpaid_invoices = await this.orm.searchCount("twh.invoice", [
-        ["state", "=", "confirmed"],
-      ]);
-
-      // Get Revenue Data with Period Filter
-      const revenueData = await this.orm.call(
+      // Call dashboard summary dengan revenue period
+      const summary = await this.orm.call(
         "twh.dashboard",
-        "get_total_revenue",
+        "get_dashboard_summary",
         [revenuePeriod]
       );
 
-      this.state.total_revenue = revenueData.formatted || "Rp 0";
-      this.state.revenue_period = revenueData.period || "month";
+      // Update state dengan data dari backend
+      this.state.total_products = summary.total_products || 0;
+      this.state.total_customers = summary.total_customers || 0;
+      this.state.unpaid_invoices = summary.unpaid_invoices || 0;
+      this.state.total_outstanding = summary.total_outstanding || "Rp 0";
+      this.state.overdue_count = summary.overdue_count || 0;
+      this.state.partial_count = summary.partial_count || 0;
+      this.state.total_revenue = summary.total_revenue || "Rp 0";
+      this.state.revenue_period = summary.revenue_period || "month";
       this.state.revenue_period_label =
-        revenueData.period_label || "This Month";
-      this.state.revenue_invoice_count = revenueData.invoice_count || 0;
-
-      // Ambil data penjualan REAL dari RPC
-      const salesData = await this.rpc("/twh/dashboard/sales_data", {});
-      this.state.monthly_sales = salesData || [];
+        summary.revenue_period_label || "This Month";
+      this.state.revenue_payment_count = summary.revenue_payment_count || 0;
+      this.state.revenue_invoice_count = summary.revenue_invoice_count || 0;
+      this.state.monthly_sales = summary.monthly_sales || [];
 
       // Render chart setelah DOM ready
       setTimeout(() => this.renderCharts(), 100);
@@ -73,40 +65,21 @@ export class TwhDashboard extends Component {
       console.log("✅ Dashboard loaded:", {
         revenue: this.state.total_revenue,
         period: this.state.revenue_period_label,
+        payments: this.state.revenue_payment_count,
         invoices: this.state.revenue_invoice_count,
+        unpaid: this.state.unpaid_invoices,
+        outstanding: this.state.total_outstanding,
       });
     } catch (error) {
       console.error("Failed to load dashboard data:", error);
     }
   }
 
-  // NEW: Handle Revenue Period Change
+  // Handle Revenue Period Change
   async onRevenuePeriodChange(event) {
     const newPeriod = event.target.value;
     console.log("📅 Changing revenue period to:", newPeriod);
-
-    // Reload hanya revenue data
-    try {
-      const revenueData = await this.orm.call(
-        "twh.dashboard",
-        "get_total_revenue",
-        [newPeriod]
-      );
-
-      this.state.total_revenue = revenueData.formatted || "Rp 0";
-      this.state.revenue_period = revenueData.period || "month";
-      this.state.revenue_period_label =
-        revenueData.period_label || "This Month";
-      this.state.revenue_invoice_count = revenueData.invoice_count || 0;
-
-      console.log("✅ Revenue updated:", {
-        period: this.state.revenue_period_label,
-        amount: this.state.total_revenue,
-        invoices: this.state.revenue_invoice_count,
-      });
-    } catch (error) {
-      console.error("Failed to update revenue:", error);
-    }
+    await this.loadDashboardData(newPeriod);
   }
 
   renderCharts() {
@@ -127,7 +100,7 @@ export class TwhDashboard extends Component {
     const options = {
       series: [
         {
-          name: "Total Penjualan (Rp)",
+          name: "Total Sales (Invoices Created)", // ← CHANGED
           data: this.state.monthly_sales.map((item) => item.amount),
         },
       ],

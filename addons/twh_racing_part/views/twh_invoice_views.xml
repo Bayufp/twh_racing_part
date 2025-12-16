@@ -7,19 +7,21 @@
         <field name="model">twh.invoice</field>
         <field name="arch" type="xml">
             <tree string="TWH Invoices" decoration-info="state=='draft'" 
-                  decoration-success="state=='paid'" decoration-danger="state=='overdue'">
+                  decoration-warning="state=='partial'"
+                  decoration-success="state=='paid'" 
+                  decoration-danger="state=='overdue'">
                 <field name="name"/>
                 <field name="date_invoice"/>
                 <field name="partner_id"/>
-                <field name="sales_person_id"/>
-                <field name="price_tier"/>
-                <field name="subtotal" widget="monetary"/>
-                <field name="discount_percent"/>
+                <field name="payment_type" widget="badge"/>
                 <field name="total" widget="monetary"/>
+                <field name="paid_amount" widget="monetary"/>
+                <field name="remaining_amount" widget="monetary"/>
+                <field name="payment_progress" widget="progressbar"/>
                 <field name="date_due"/>
                 <field name="state" widget="badge" 
                        decoration-info="state=='draft'"
-                       decoration-warning="state=='confirmed'"
+                       decoration-warning="state in ['confirmed', 'partial']"
                        decoration-success="state=='paid'"
                        decoration-danger="state=='overdue'"/>
             </tree>
@@ -35,8 +37,11 @@
                 <header>
                     <button name="action_confirm" string="Confirm" type="object" 
                             class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_add_payment" string="Record Payment" type="object" 
+                            class="oe_highlight" 
+                            invisible="state not in ['confirmed', 'partial', 'overdue'] or remaining_amount &lt;= 0"/>
                     <button name="action_mark_paid" string="Mark as Paid" type="object" 
-                            class="oe_highlight" invisible="state not in ['confirmed', 'overdue']"/>
+                            invisible="state not in ['confirmed', 'overdue']"/>
                     <button name="action_print_invoice" string="Print Invoice" type="object" 
                             invisible="state == 'draft'"/>
                     <button name="action_cancel" string="Cancel" type="object" 
@@ -49,6 +54,11 @@
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
+                        <button name="action_view_payments" type="object" 
+                                class="oe_stat_button" icon="fa-money"
+                                invisible="payment_count == 0">
+                            <field name="payment_count" widget="statinfo" string="Payments"/>
+                        </button>
                         <button name="action_print_invoice" type="object" 
                                 class="oe_stat_button" icon="fa-file-pdf-o" 
                                 invisible="state == 'draft'">
@@ -64,6 +74,34 @@
                             <field name="name" readonly="1"/>
                         </h1>
                     </div>
+
+                    <!-- Payment Status Alert (FIXED - NO OWL) -->
+                    <div class="alert alert-info" role="alert" 
+                         invisible="state not in ['confirmed', 'partial', 'overdue'] or payment_type != 'tempo'">
+                        <h5>Payment Status</h5>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <strong>Total Invoice:</strong><br/>
+                                <field name="total" widget="monetary" readonly="1" nolabel="1"/>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Paid Amount:</strong><br/>
+                                <span class="text-success">
+                                    <field name="paid_amount" widget="monetary" readonly="1" nolabel="1"/>
+                                </span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Remaining:</strong><br/>
+                                <span class="text-danger">
+                                    <field name="remaining_amount" widget="monetary" readonly="1" nolabel="1"/>
+                                </span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Progress:</strong><br/>
+                                <field name="payment_progress" widget="percentage" readonly="1" nolabel="1"/>
+                            </div>
+                        </div>
+                    </div>
                     
                     <group>
                         <group name="customer_info">
@@ -74,9 +112,15 @@
                             <field name="date_invoice" 
                                    required="1"
                                    readonly="state != 'draft'"/>
-                            <field name="payment_term_days" 
+                            <field name="payment_type" 
+                                   widget="radio"
+                                   required="1"
                                    readonly="state != 'draft'"/>
-                            <field name="date_due" readonly="1"/>
+                            <field name="payment_term_days" 
+                                   readonly="state != 'draft' or payment_type == 'cash'"
+                                   invisible="payment_type == 'cash'"/>
+                            <field name="date_due" readonly="1" 
+                                   invisible="payment_type == 'cash'"/>
                         </group>
                         <group name="sales_info">
                             <field name="sales_person_id" 
@@ -117,6 +161,32 @@
                                        class="oe_subtotal_footer_separator"/>
                             </group>
                         </page>
+
+                        <!-- Payment History Tab -->
+                        <page string="Payment History" name="payment_history"
+                              invisible="state == 'draft'">
+                            <div class="alert alert-warning" role="alert"
+                                 invisible="payment_count &gt; 0">
+                                <i class="fa fa-info-circle"/> No payments recorded yet. 
+                                <button name="action_add_payment" string="Record Payment" 
+                                        type="object" class="btn-link"
+                                        invisible="state not in ['confirmed', 'partial', 'overdue']"/>
+                            </div>
+                            
+                            <field name="payment_ids" readonly="1">
+                                <tree decoration-muted="state == 'cancelled'">
+                                    <field name="name"/>
+                                    <field name="payment_date"/>
+                                    <field name="amount" widget="monetary" sum="Total Paid"/>
+                                    <field name="payment_method"/>
+                                    <field name="note"/>
+                                    <field name="recorded_by"/>
+                                    <field name="state" widget="badge"
+                                           decoration-success="state == 'confirmed'"
+                                           decoration-muted="state == 'cancelled'"/>
+                                </tree>
+                            </field>
+                        </page>
                         
                         <page string="Commission" name="commission" 
                               invisible="state == 'draft'">
@@ -139,6 +209,7 @@
                         
                         <page string="Other Info" name="other_info">
                             <group>
+                                <field name="sale_order_id" readonly="1"/>
                                 <field name="notes" placeholder="Internal notes..."/>
                                 <field name="company_id" invisible="1"/>
                             </group>
@@ -166,8 +237,15 @@
                 <separator/>
                 <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
                 <filter string="Confirmed" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
+                <filter string="Partial Payment" name="partial" domain="[('state', '=', 'partial')]"/>
                 <filter string="Paid" name="paid" domain="[('state', '=', 'paid')]"/>
                 <filter string="Overdue" name="overdue" domain="[('state', '=', 'overdue')]"/>
+                <separator/>
+                <filter string="Cash" name="cash" domain="[('payment_type', '=', 'cash')]"/>
+                <filter string="Tempo" name="tempo" domain="[('payment_type', '=', 'tempo')]"/>
+                <separator/>
+                <filter string="Unpaid (Tempo)" name="unpaid_tempo" 
+                        domain="[('payment_type', '=', 'tempo'), ('state', 'in', ['confirmed', 'partial', 'overdue'])]"/>
                 <separator/>
                 <filter string="My Invoices" name="my_invoices" 
                         domain="[('sales_person_id', '=', uid)]"/>
@@ -177,6 +255,7 @@
                                  ('date_invoice', '&lt;=', (context_today() + relativedelta(day=31)).strftime('%Y-%m-%d'))]"/>
                 <group expand="0" string="Group By">
                     <filter string="Customer" name="group_partner" context="{'group_by': 'partner_id'}"/>
+                    <filter string="Payment Type" name="group_payment_type" context="{'group_by': 'payment_type'}"/>
                     <filter string="Sales Person" name="group_sales" context="{'group_by': 'sales_person_id'}"/>
                     <filter string="State" name="group_state" context="{'group_by': 'state'}"/>
                     <filter string="Invoice Date" name="group_date" context="{'group_by': 'date_invoice'}"/>
@@ -196,7 +275,7 @@
                 Create your first TWH Invoice
             </p>
             <p>
-                Click the create button to start creating invoices for your customers.
+                Create invoices with flexible payment options: Cash (immediate payment) or Tempo (payment terms).
             </p>
         </field>
     </record>
@@ -206,6 +285,16 @@
         <field name="name">TWH Invoice Sequence</field>
         <field name="code">twh.invoice</field>
         <field name="prefix">TWH/INV/%(year)s/</field>
+        <field name="padding">5</field>
+        <field name="number_increment">1</field>
+        <field name="number_next">1</field>
+    </record>
+
+    <!-- Sequence for Payment Number -->
+    <record id="seq_twh_payment" model="ir.sequence">
+        <field name="name">TWH Payment Sequence</field>
+        <field name="code">twh.payment</field>
+        <field name="prefix">TWH/PAY/%(year)s/</field>
         <field name="padding">5</field>
         <field name="number_increment">1</field>
         <field name="number_next">1</field>

@@ -40,14 +40,16 @@
 
         # Views
         'views/action_views.xml',
-        'views/menu_views.xml',
-        'views/dashboard_views.xml',
-        'views/sale_order_views.xml',
         'views/twh_invoice_views.xml',
+        'views/twh_payment_views.xml',
+        'views/invoice_due_tracking_views.xml',
+        'views/sale_order_views.xml',
         'views/sales_commission_views.xml',
         'views/due_reminder_views.xml',
         'views/product_analytics_views.xml',
         'views/twh_pricelist_views.xml',
+        'views/dashboard_views.xml',
+        'views/menu_views.xml',
 
         # Data
         'data/product_categories.xml',
@@ -73,6 +75,7 @@
 
         # CSS
         'twh_racing_part/static/src/css/twh_dashboard.css',
+        'twh_racing_part/static/src/css/twh_due_reminders.css',
 
         # JS
         'twh_racing_part/static/src/js/twh_dashboard.js',
@@ -87,4 +90,4 @@
     'application': True,
     'auto_install': False,
     'sequence': 1,
-}
+} 
