@@ -1,10 +1,23 @@
-# Odoo config
+# Odoo Sensitive Config
 config/odoo.conf
 
-# Python cache
+# Python Cache
 __pycache__/
 *.pyc
+*.pyo
 
-# Odoo runtime
+# Logs
 *.log
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Environment
 .env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
