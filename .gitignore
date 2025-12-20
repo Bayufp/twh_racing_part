@@ -1,2 +1,10 @@
+# Odoo config
+config/odoo.conf
+
+# Python cache
 __pycache__/
 *.pyc
+
+# Odoo runtime
+*.log
+.env
