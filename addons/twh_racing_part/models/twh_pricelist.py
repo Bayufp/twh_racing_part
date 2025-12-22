@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from odoo import models, fields, api, _
+from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError
 import logging
 
@@ -9,130 +9,208 @@ _logger = logging.getLogger(__name__)
 
 class TwhPriceTier(models.Model):
     """
-    Model untuk menyimpan tier harga TWH:
-    - Bayu (Harga Dasar/Cost)
-    - Dealer
-    - Harga A
-    - Harga B
-    - HET (Harga Eceran Tertinggi)
+    Model untuk tier/kategori harga TWH.
+    
+    TWH punya 5 tier harga:
+    - Bayu: Harga dasar/cost (untuk hitung komisi)
+    - Dealer: Harga khusus dealer
+    - Harga A: Harga untuk toko kategori A
+    - Harga B: Harga untuk toko kategori B
+    - HET: Harga Eceran Tertinggi (untuk konsumen)
     """
     _name = 'twh.price.tier'
-    _description = 'TWH Price Tier Configuration'
+    _description = 'Kategori Harga TWH'
     _order = 'sequence, id'
     
-    name = fields.Char(string='Tier Name', required=True)
+    # ========================
+    # FIELDS
+    # ========================
+    
+    name = fields.Char(
+        string='Nama Tier',
+        required=True,
+        help='Nama kategori harga (misal: Harga A, Harga B)'
+    )
+    
     code = fields.Selection([
         ('bayu', 'Bayu'),
         ('dealer', 'Dealer'),
         ('price_a', 'Harga A'),
         ('price_b', 'Harga B'),
         ('het', 'HET'),
-    ], string='Tier Code', required=True)
-    sequence = fields.Integer(string='Sequence', default=10)
-    active = fields.Boolean(default=True)
-    description = fields.Text(string='Description')
+    ], string='Kode Tier', required=True,
+       help='Kode unik untuk identifikasi tier')
+    
+    sequence = fields.Integer(
+        string='Urutan',
+        default=10,
+        help='Urutan tampilan tier'
+    )
+    
+    active = fields.Boolean(
+        default=True,
+        help='Non-aktifkan jika tier tidak digunakan lagi'
+    )
+    
+    description = fields.Text(
+        string='Deskripsi',
+        help='Keterangan tentang tier ini'
+    )
+    
+    # ========================
+    # CONSTRAINTS
+    # ========================
     
     _sql_constraints = [
-        ('code_unique', 'unique(code)', 'Price tier code must be unique!')
+        ('code_unique', 'unique(code)', 'Kode tier harus unik!')
     ]
 
 
 class TwhProductPrice(models.Model):
     """
-    Model untuk menyimpan harga produk per tier
+    Model untuk menyimpan harga produk per tier.
+    
+    Setiap produk bisa punya banyak harga tergantung tier.
+    Contoh:
+    - Produk A -> Harga Bayu: Rp 100.000
+    - Produk A -> Harga A: Rp 120.000
+    - Produk A -> Harga B: Rp 115.000
     """
     _name = 'twh.product.price'
-    _description = 'TWH Product Price per Tier'
+    _description = 'Harga Produk per Tier'
     _rec_name = 'product_id'
     _order = 'product_id, tier_id'
     
+    # ========================
+    # FIELDS
+    # ========================
+    
     product_id = fields.Many2one(
-        'product.product', 
-        string='Product', 
-        required=True, 
-        ondelete='cascade'
+        'product.product',
+        string='Produk',
+        required=True,
+        ondelete='cascade',
+        help='Produk yang diberi harga'
     )
+    
     tier_id = fields.Many2one(
-        'twh.price.tier', 
-        string='Price Tier', 
-        required=True, 
-        ondelete='cascade'
+        'twh.price.tier',
+        string='Kategori Harga',
+        required=True,
+        ondelete='cascade',
+        help='Tier harga yang digunakan'
     )
+    
     tier_code = fields.Selection(
-        related='tier_id.code', 
-        string='Tier Code', 
+        related='tier_id.code',
+        string='Kode Tier',
         store=True,
         readonly=True
     )
+    
     price = fields.Float(
-        string='Price', 
-        required=True, 
-        digits='Product Price'
+        string='Harga',
+        required=True,
+        digits='Product Price',
+        help='Harga dalam rupiah'
     )
+    
     currency_id = fields.Many2one(
-        'res.currency', 
-        string='Currency', 
+        'res.currency',
+        string='Mata Uang',
         default=lambda self: self.env.company.currency_id
     )
-    active = fields.Boolean(default=True)
+    
+    active = fields.Boolean(
+        default=True,
+        help='Non-aktifkan jika harga tidak berlaku lagi'
+    )
+    
+    # ========================
+    # CONSTRAINTS
+    # ========================
     
     @api.constrains('price')
     def _check_price(self):
+        """Validasi harga tidak boleh negatif."""
         for record in self:
             if record.price < 0:
-                raise ValidationError(_('Price cannot be negative!'))
+                raise ValidationError(_('Harga tidak boleh negatif!'))
     
     _sql_constraints = [
-        ('product_tier_unique', 'unique(product_id, tier_id)', 
-         'Product can only have one price per tier!')
+        ('product_tier_unique', 'unique(product_id, tier_id)',
+         'Satu produk hanya bisa punya satu harga per tier!')
     ]
 
 
 class ProductProduct(models.Model):
     """
-    Extend product.product untuk TWH pricing
+    Extend model product.product untuk tambah harga TWH.
     """
     _inherit = 'product.product'
     
+    # ========================
+    # FIELDS
+    # ========================
+    
+    # Relasi ke harga per tier
     twh_price_ids = fields.One2many(
-        'twh.product.price', 
-        'product_id', 
-        string='TWH Prices'
+        'twh.product.price',
+        'product_id',
+        string='Harga TWH',
+        help='Daftar harga produk ini per tier'
     )
     
-    # Computed fields untuk quick access
+    # Field computed untuk quick access
     price_bayu = fields.Float(
-        string='Harga Bayu', 
-        compute='_compute_twh_prices', 
-        store=True
+        string='Harga Bayu',
+        compute='_compute_twh_prices',
+        store=True,
+        help='Harga dasar/cost'
     )
+    
     price_dealer = fields.Float(
-        string='Harga Dealer', 
-        compute='_compute_twh_prices', 
-        store=True
+        string='Harga Dealer',
+        compute='_compute_twh_prices',
+        store=True,
+        help='Harga untuk dealer'
     )
+    
     price_a = fields.Float(
-        string='Harga A', 
-        compute='_compute_twh_prices', 
-        store=True
+        string='Harga A',
+        compute='_compute_twh_prices',
+        store=True,
+        help='Harga untuk toko kategori A'
     )
+    
     price_b = fields.Float(
-        string='Harga B', 
-        compute='_compute_twh_prices', 
-        store=True
+        string='Harga B',
+        compute='_compute_twh_prices',
+        store=True,
+        help='Harga untuk toko kategori B'
     )
+    
     price_het = fields.Float(
-        string='HET', 
-        compute='_compute_twh_prices', 
-        store=True
+        string='HET',
+        compute='_compute_twh_prices',
+        store=True,
+        help='Harga Eceran Tertinggi'
     )
+    
+    # ========================
+    # COMPUTED METHODS
+    # ========================
     
     @api.depends('twh_price_ids', 'twh_price_ids.price', 'twh_price_ids.tier_code')
     def _compute_twh_prices(self):
         """
-        Compute harga untuk setiap tier dari twh_price_ids
+        Hitung harga untuk setiap tier dari twh_price_ids.
+        
+        Field computed ini memudahkan akses harga tanpa perlu
+        search twh_price_ids setiap kali.
         """
         for product in self:
+            # Default semua harga 0
             prices = {
                 'price_bayu': 0.0,
                 'price_dealer': 0.0,
@@ -141,73 +219,124 @@ class ProductProduct(models.Model):
                 'price_het': 0.0,
             }
             
+            # Loop semua harga yang tersimpan
             for price_line in product.twh_price_ids:
-                if price_line.tier_code == 'bayu':
+                tier_code = price_line.tier_code
+                
+                # Map tier_code ke field
+                if tier_code == 'bayu':
                     prices['price_bayu'] = price_line.price
-                elif price_line.tier_code == 'dealer':
+                elif tier_code == 'dealer':
                     prices['price_dealer'] = price_line.price
-                elif price_line.tier_code == 'price_a':
+                elif tier_code == 'price_a':
                     prices['price_a'] = price_line.price
-                elif price_line.tier_code == 'price_b':
+                elif tier_code == 'price_b':
                     prices['price_b'] = price_line.price
-                elif price_line.tier_code == 'het':
+                elif tier_code == 'het':
                     prices['price_het'] = price_line.price
             
+            # Update field produk
             product.update(prices)
+    
+    # ========================
+    # HELPER METHODS
+    # ========================
     
     def get_price_by_tier(self, tier_code):
         """
-        Helper method untuk get harga berdasarkan tier code
-        Usage: product.get_price_by_tier('bayu')
+        Ambil harga produk berdasarkan kode tier.
+        
+        Args:
+            tier_code (str): Kode tier ('bayu', 'dealer', 'price_a', dll)
+        
+        Returns:
+            float: Harga produk untuk tier tersebut (0 jika tidak ada)
+        
+        Contoh:
+            >>> product.get_price_by_tier('price_a')
+            120000.0
         """
         self.ensure_one()
-        price_line = self.twh_price_ids.filtered(lambda p: p.tier_code == tier_code)
+        
+        # Cari harga dengan tier_code yang sesuai
+        price_line = self.twh_price_ids.filtered(
+            lambda line: line.tier_code == tier_code
+        )
+        
         return price_line.price if price_line else 0.0
     
     def get_price_by_tier_id(self, tier_id):
         """
-        Helper method untuk get harga berdasarkan tier_id
-        Usage: product.get_price_by_tier_id(tier.id)
+        Ambil harga produk berdasarkan ID tier.
+        
+        Args:
+            tier_id (int): ID record tier
+        
+        Returns:
+            float: Harga produk untuk tier tersebut (0 jika tidak ada)
+        
+        Contoh:
+            >>> tier = env['twh.price.tier'].browse(1)
+            >>> product.get_price_by_tier_id(tier.id)
+            120000.0
         """
         self.ensure_one()
-        price_line = self.twh_price_ids.filtered(lambda p: p.tier_id.id == tier_id)
+        
+        # Cari harga dengan tier_id yang sesuai
+        price_line = self.twh_price_ids.filtered(
+            lambda line: line.tier_id.id == tier_id
+        )
+        
         return price_line.price if price_line else 0.0
 
 
 class ProductTemplate(models.Model):
     """
-    Extend product.template untuk TWH category & pricing
+    Extend model product.template untuk tambah kategori & harga TWH.
     """
     _inherit = 'product.template'
     
-    # TWH prices as computed fields (agregasi dari variants)
+    # ========================
+    # FIELDS
+    # ========================
+    
+    # Field harga (computed dari variant pertama)
     price_bayu = fields.Float(
-        string='Harga Bayu', 
-        compute='_compute_twh_prices_template', 
-        store=True
-    )
-    price_dealer = fields.Float(
-        string='Harga Dealer', 
-        compute='_compute_twh_prices_template', 
-        store=True
-    )
-    price_a = fields.Float(
-        string='Harga A', 
-        compute='_compute_twh_prices_template', 
-        store=True
-    )
-    price_b = fields.Float(
-        string='Harga B', 
-        compute='_compute_twh_prices_template', 
-        store=True
-    )
-    price_het = fields.Float(
-        string='HET', 
-        compute='_compute_twh_prices_template', 
-        store=True
+        string='Harga Bayu',
+        compute='_compute_twh_prices_template',
+        store=True,
+        help='Harga dasar/cost'
     )
     
-    # Category khusus TWH
+    price_dealer = fields.Float(
+        string='Harga Dealer',
+        compute='_compute_twh_prices_template',
+        store=True,
+        help='Harga untuk dealer'
+    )
+    
+    price_a = fields.Float(
+        string='Harga A',
+        compute='_compute_twh_prices_template',
+        store=True,
+        help='Harga untuk toko kategori A'
+    )
+    
+    price_b = fields.Float(
+        string='Harga B',
+        compute='_compute_twh_prices_template',
+        store=True,
+        help='Harga untuk toko kategori B'
+    )
+    
+    price_het = fields.Float(
+        string='HET',
+        compute='_compute_twh_prices_template',
+        store=True,
+        help='Harga Eceran Tertinggi'
+    )
+    
+    # Kategori khusus TWH
     twh_category = fields.Selection([
         ('gear_ratio', 'Gear Ratio Set'),
         ('crankshaft', 'Forged Crankshaft'),
@@ -224,20 +353,30 @@ class ProductTemplate(models.Model):
         ('piston', 'Piston Kit'),
         ('ring', 'Ring Piston'),
         ('other', 'Lain-lain'),
-    ], string='TWH Category')
+    ], string='Kategori TWH',
+       help='Jenis produk racing part')
     
-    # Compatibility dengan motor
-    bike_model = fields.Char(string='Bike Model', help='e.g., MX King, NMAX, Beat')
+    # Kompatibilitas motor
+    bike_model = fields.Char(
+        string='Model Motor',
+        help='Contoh: MX King, NMAX, Beat'
+    )
+    
     bike_brand = fields.Selection([
         ('yamaha', 'Yamaha'),
         ('honda', 'Honda'),
         ('suzuki', 'Suzuki'),
         ('kawasaki', 'Kawasaki'),
-        ('other', 'Other'),
-    ], string='Bike Brand')
+        ('other', 'Lainnya'),
+    ], string='Merk Motor',
+       help='Merk motor yang kompatibel')
+    
+    # ========================
+    # COMPUTED METHODS
+    # ========================
     
     @api.depends(
-        'product_variant_ids', 
+        'product_variant_ids',
         'product_variant_ids.price_bayu',
         'product_variant_ids.price_dealer',
         'product_variant_ids.price_a',
@@ -246,12 +385,14 @@ class ProductTemplate(models.Model):
     )
     def _compute_twh_prices_template(self):
         """
-        Compute harga template dari first variant
-        Untuk product tanpa variant, akan ambil dari variant tunggal
+        Hitung harga template dari variant pertama.
+        
+        Untuk produk tanpa variant, akan ambil dari variant tunggal yang auto-created.
+        Untuk produk dengan variant, ambil harga dari variant pertama.
         """
         for template in self:
             if template.product_variant_ids:
-                # Ambil dari variant pertama
+                # Ambil harga dari variant pertama
                 first_variant = template.product_variant_ids[0]
                 template.price_bayu = first_variant.price_bayu
                 template.price_dealer = first_variant.price_dealer
@@ -259,7 +400,7 @@ class ProductTemplate(models.Model):
                 template.price_b = first_variant.price_b
                 template.price_het = first_variant.price_het
             else:
-                # Jika belum ada variant, set 0
+                # Belum ada variant, set semua 0
                 template.price_bayu = 0.0
                 template.price_dealer = 0.0
                 template.price_a = 0.0

@@ -1,19 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- Sales Commission Report Template -->
+    <!-- ========================================
+         SALES COMMISSION REPORT TEMPLATE
+         Template untuk cetak laporan komisi sales
+         ======================================== -->
+
     <template id="report_sales_commission_document">
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="o">
                 <t t-call="web.external_layout">
                     <div class="page">
+                        
                         <!-- Header -->
                         <div class="row">
                             <div class="col-12 text-center">
-                                <h2>SALES COMMISSION REPORT</h2>
+                                <h2>LAPORAN KOMISI SALES</h2>
                                 <h4>TWH Racing Part</h4>
                                 <p>
-                                    Period: <span t-esc="o.date_from"/> to <span t-esc="o.date_to"/>
+                                    Periode: <span t-esc="o.date_from"/> s/d <span t-esc="o.date_to"/>
                                     <t t-if="o.sales_person_id">
                                         <br/>Sales Person: <span t-field="o.sales_person_id.name"/>
                                     </t>
@@ -23,7 +28,7 @@
 
                         <hr/>
 
-                        <!-- Get commission data -->
+                        <!-- Ambil data komisi dari backend -->
                         <t t-set="commission_obj" t-value="env['twh.sales.commission']"/>
                         <t t-set="summary" t-value="commission_obj.get_commission_summary(
                             o.sales_person_id.id if o.sales_person_id else None,
@@ -33,24 +38,29 @@
 
                         <!-- Summary Cards -->
                         <div class="row mt-4 mb-4">
+                            <!-- Card 1: Total Commission -->
                             <div class="col-3">
                                 <div class="card">
                                     <div class="card-body text-center">
-                                        <h5>Total Commission</h5>
+                                        <h5>Total Komisi</h5>
                                         <h3 style="color: #28a745;">
                                             Rp <t t-esc="'{:,.0f}'.format(summary['total_commission'])"/>
                                         </h3>
                                     </div>
                                 </div>
                             </div>
+                            
+                            <!-- Card 2: Total Invoices -->
                             <div class="col-3">
                                 <div class="card">
                                     <div class="card-body text-center">
-                                        <h5>Total Invoices</h5>
+                                        <h5>Total Invoice</h5>
                                         <h3><t t-esc="summary['total_invoices']"/></h3>
                                     </div>
                                 </div>
                             </div>
+                            
+                            <!-- Card 3: Total Quantity -->
                             <div class="col-3">
                                 <div class="card">
                                     <div class="card-body text-center">
@@ -59,10 +69,12 @@
                                     </div>
                                 </div>
                             </div>
+                            
+                            <!-- Card 4: Avg Commission per Invoice -->
                             <div class="col-3">
                                 <div class="card">
                                     <div class="card-body text-center">
-                                        <h5>Avg Commission/Invoice</h5>
+                                        <h5>Rata-rata Komisi/Invoice</h5>
                                         <h3>
                                             <t t-if="summary['total_invoices'] &gt; 0">
                                                 Rp <t t-esc="'{:,.0f}'.format(summary['total_commission'] / summary['total_invoices'])"/>
@@ -74,42 +86,57 @@
                             </div>
                         </div>
 
-                        <!-- Commission Details -->
-                        <h4 class="mt-4">Commission Details</h4>
+                        <!-- Commission Details Table -->
+                        <h4 class="mt-4">Detail Komisi</h4>
                         <table class="table table-sm table-bordered">
                             <thead style="background-color: #e9ecef;">
                                 <tr>
-                                    <th>Date</th>
+                                    <th>Tanggal</th>
                                     <th>Invoice</th>
-                                    <th>Product</th>
+                                    <th>Produk</th>
                                     <th class="text-end">Qty</th>
-                                    <th class="text-end">Cost Price</th>
-                                    <th class="text-end">Selling Price</th>
+                                    <th class="text-end">Harga Bayu</th>
+                                    <th class="text-end">Harga Jual</th>
                                     <th class="text-end">Margin</th>
-                                    <th class="text-end">Commission</th>
+                                    <th class="text-end">Komisi</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <t t-foreach="summary['commissions']" t-as="comm">
                                     <tr>
+                                        <!-- Tanggal -->
                                         <td><span t-field="comm.date"/></td>
+                                        
+                                        <!-- Invoice Number -->
                                         <td><span t-field="comm.invoice_name"/></td>
+                                        
+                                        <!-- Product Name -->
                                         <td><span t-field="comm.product_id.name"/></td>
+                                        
+                                        <!-- Quantity -->
                                         <td class="text-end">
                                             <span t-field="comm.quantity"/>
                                         </td>
+                                        
+                                        <!-- Cost Price (Harga Bayu) -->
                                         <td class="text-end">
                                             <span t-field="comm.cost_price" 
                                                   t-options='{"widget": "monetary", "display_currency": comm.currency_id}'/>
                                         </td>
+                                        
+                                        <!-- Selling Price (Harga Jual) -->
                                         <td class="text-end">
                                             <span t-field="comm.selling_price" 
                                                   t-options='{"widget": "monetary", "display_currency": comm.currency_id}'/>
                                         </td>
+                                        
+                                        <!-- Margin per Unit -->
                                         <td class="text-end">
                                             <span t-field="comm.margin" 
                                                   t-options='{"widget": "monetary", "display_currency": comm.currency_id}'/>
                                         </td>
+                                        
+                                        <!-- Total Commission -->
                                         <td class="text-end">
                                             <strong>
                                                 <span t-field="comm.commission_amount" 
@@ -119,9 +146,13 @@
                                     </tr>
                                 </t>
                             </tbody>
+                            
+                            <!-- Footer: Total -->
                             <tfoot style="background-color: #f8f9fa;">
                                 <tr>
-                                    <td colspan="7" class="text-end"><strong>TOTAL COMMISSION:</strong></td>
+                                    <td colspan="7" class="text-end">
+                                        <strong>TOTAL KOMISI:</strong>
+                                    </td>
                                     <td class="text-end">
                                         <strong style="font-size: 12pt;">
                                             Rp <t t-esc="'{:,.0f}'.format(summary['total_commission'])"/>
@@ -131,22 +162,26 @@
                             </tfoot>
                         </table>
 
-                        <!-- Footer -->
+                        <!-- Report Footer -->
                         <div class="row mt-5">
+                            <!-- Left: Report Generated Date -->
                             <div class="col-6">
                                 <p>
-                                    Report Generated: <span t-esc="datetime.datetime.now().strftime('%d %B %Y %H:%M')"/>
+                                    Laporan dibuat: <span t-esc="datetime.datetime.now().strftime('%d %B %Y %H:%M')"/>
                                 </p>
                             </div>
+                            
+                            <!-- Right: Signature Area -->
                             <div class="col-6 text-end">
                                 <p>
-                                    <strong>Authorized Signature</strong><br/>
+                                    <strong>Tanda Tangan</strong><br/>
                                     <br/>
                                     <br/>
                                     _____________________
                                 </p>
                             </div>
                         </div>
+                        
                     </div>
                 </t>
             </t>

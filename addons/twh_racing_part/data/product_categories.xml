@@ -1,57 +1,74 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo noupdate="1">
 
-    <!-- Product Categories for TWH -->
+    <!-- ========================================
+         PRODUCT CATEGORIES FOR TWH
+         Kategori produk khusus untuk TWH Racing Part
+         
+         noupdate="1" = Data ini hanya dibuat saat install
+         ======================================== -->
+
+    <!-- Category: Gear Ratio Set -->
     <record id="product_category_gear_ratio" model="product.category">
         <field name="name">Gear Ratio Set</field>
         <field name="parent_id" ref="product.product_category_all"/>
     </record>
 
+    <!-- Category: Forged Crankshaft -->
     <record id="product_category_crankshaft" model="product.category">
         <field name="name">Forged Crankshaft</field>
         <field name="parent_id" ref="product.product_category_all"/>
     </record>
 
+    <!-- Category: Cylinder Block Bore Up -->
     <record id="product_category_cylinder" model="product.category">
         <field name="name">Cylinder Block Bore Up</field>
         <field name="parent_id" ref="product.product_category_all"/>
     </record>
 
+    <!-- Category: Dinamo Starter -->
     <record id="product_category_starter" model="product.category">
         <field name="name">Dinamo Starter</field>
         <field name="parent_id" ref="product.product_category_all"/>
     </record>
 
+    <!-- Category: Blue Roller -->
     <record id="product_category_roller" model="product.category">
         <field name="name">Blue Roller</field>
         <field name="parent_id" ref="product.product_category_all"/>
     </record>
 
+    <!-- Category: Carburetor Jet -->
     <record id="product_category_jet" model="product.category">
         <field name="name">Carburetor Jet</field>
         <field name="parent_id" ref="product.product_category_all"/>
     </record>
 
+    <!-- Category: Clutch System -->
     <record id="product_category_clutch" model="product.category">
         <field name="name">Clutch System</field>
         <field name="parent_id" ref="product.product_category_all"/>
     </record>
 
+    <!-- Category: Pulley System -->
     <record id="product_category_pulley" model="product.category">
         <field name="name">Pulley System</field>
         <field name="parent_id" ref="product.product_category_all"/>
     </record>
 
+    <!-- Category: Spring/Per -->
     <record id="product_category_spring" model="product.category">
         <field name="name">Spring/Per</field>
         <field name="parent_id" ref="product.product_category_all"/>
     </record>
 
+    <!-- Category: Valve/Klep -->
     <record id="product_category_valve" model="product.category">
         <field name="name">Valve/Klep</field>
         <field name="parent_id" ref="product.product_category_all"/>
     </record>
 
+    <!-- Category: Piston Kit -->
     <record id="product_category_piston" model="product.category">
         <field name="name">Piston Kit</field>
         <field name="parent_id" ref="product.product_category_all"/>

@@ -1,6 +1,12 @@
-/* TWH Due Reminders Custom Styling */
+/* ===================================================================
+   TWH Due Reminders Custom Styling
+   Stylesheet untuk tampilan reminder jatuh tempo yang lebih clean
+   =================================================================== */
 
-/* Simplify table header */
+/* ===================================================================
+   TABLE HEADER
+   =================================================================== */
+
 .o_list_view thead th {
   background-color: #f8f9fa;
   font-weight: 600;
@@ -10,29 +16,39 @@
   padding: 12px 8px;
 }
 
-/* Better row hover */
+/* ===================================================================
+   ROW STYLING
+   =================================================================== */
+
+/* Better hover effect */
 .o_list_view tbody tr:hover {
   background-color: #f0f7ff !important;
 }
 
-/* Status badges - more prominent */
+/* Overdue row - highlight merah */
+.o_list_view tbody tr.text-danger {
+  background-color: #fff5f5 !important;
+}
+
+/* Partial payment row - highlight kuning */
+.o_list_view tbody tr.text-warning {
+  background-color: #fffbf0 !important;
+}
+
+/* ===================================================================
+   STATUS BADGES
+   =================================================================== */
+
 .o_list_view .badge {
   padding: 6px 12px;
   font-size: 12px;
   font-weight: 600;
 }
 
-/* Overdue row styling */
-.o_list_view tbody tr.text-danger {
-  background-color: #fff5f5 !important;
-}
+/* ===================================================================
+   BUTTON STYLING
+   =================================================================== */
 
-/* Partial payment row */
-.o_list_view tbody tr.text-warning {
-  background-color: #fffbf0 !important;
-}
-
-/* Button styling */
 .o_list_view .btn-success {
   background-color: #10b981;
   border: none;
@@ -44,13 +60,19 @@
   background-color: #059669;
 }
 
-/* Monetary fields - bigger & bold */
+/* ===================================================================
+   MONETARY FIELDS
+   =================================================================== */
+
 .o_list_view .o_field_monetary {
   font-weight: 600;
   font-size: 13px;
 }
 
-/* Search panel filters */
+/* ===================================================================
+   SEARCH PANEL
+   =================================================================== */
+
 .o_search_panel_filter .o_search_panel_filter_value {
   padding: 8px 12px;
   border-radius: 6px;

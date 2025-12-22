@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- Price Tier Tree View -->
+    <!-- ========================================
+         PRICE TIER VIEWS
+         ======================================== -->
+
+    <!-- Tree View -->
     <record id="view_twh_price_tier_tree" model="ir.ui.view">
         <field name="name">twh.price.tier.tree</field>
         <field name="model">twh.price.tier</field>
         <field name="arch" type="xml">
-            <tree string="Price Tiers">
+            <tree string="Kategori Harga">
                 <field name="sequence" widget="handle"/>
                 <field name="name"/>
                 <field name="code"/>
@@ -15,49 +19,71 @@
         </field>
     </record>
 
-    <!-- Price Tier Form View -->
+    <!-- Form View -->
     <record id="view_twh_price_tier_form" model="ir.ui.view">
         <field name="name">twh.price.tier.form</field>
         <field name="model">twh.price.tier</field>
         <field name="arch" type="xml">
-            <form string="Price Tier">
+            <form string="Kategori Harga">
                 <sheet>
+                    <!-- Archive Button -->
                     <div class="oe_button_box" name="button_box">
                         <field name="active" widget="boolean_button" 
                                options="{'terminology': 'active'}"/>
                     </div>
+                    
+                    <!-- Main Info -->
                     <group>
                         <group>
-                            <field name="name" required="1"/>
+                            <field name="name" required="1" 
+                                   placeholder="Contoh: Harga A, Harga Dealer"/>
                             <field name="code" required="1"/>
                         </group>
                         <group>
                             <field name="sequence"/>
                         </group>
                     </group>
+                    
+                    <!-- Description -->
                     <group>
-                        <field name="description" placeholder="Description..."/>
+                        <field name="description" 
+                               placeholder="Deskripsi kategori harga ini..."/>
                     </group>
                 </sheet>
             </form>
         </field>
     </record>
 
-    <!-- Price Tier Action -->
+    <!-- Action -->
     <record id="action_twh_price_tier" model="ir.actions.act_window">
-        <field name="name">Price Tiers</field>
+        <field name="name">Kategori Harga</field>
         <field name="res_model">twh.price.tier</field>
         <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Buat Kategori Harga Baru
+            </p>
+            <p>
+                Kategori harga digunakan untuk membedakan harga produk 
+                ke berbagai jenis customer (Bayu, Dealer, Harga A/B, HET).
+            </p>
+        </field>
     </record>
 
-    <!-- Product Price Tree View -->
+    <!-- ========================================
+         PRODUCT PRICE VIEWS
+         ======================================== -->
+
+    <!-- Tree View -->
     <record id="view_twh_product_price_tree" model="ir.ui.view">
         <field name="name">twh.product.price.tree</field>
         <field name="model">twh.product.price</field>
         <field name="arch" type="xml">
-            <tree string="Product Prices" editable="bottom">
-                <field name="product_id" required="1"/>
-                <field name="tier_id" required="1"/>
+            <tree string="Harga Produk" editable="bottom">
+                <field name="product_id" required="1" 
+                       placeholder="Pilih produk"/>
+                <field name="tier_id" required="1" 
+                       placeholder="Pilih kategori harga"/>
                 <field name="tier_code"/>
                 <field name="price" widget="monetary" required="1"/>
                 <field name="currency_id" column_invisible="1"/>
@@ -66,12 +92,12 @@
         </field>
     </record>
 
-    <!-- Product Price Form View -->
+    <!-- Form View -->
     <record id="view_twh_product_price_form" model="ir.ui.view">
         <field name="name">twh.product.price.form</field>
         <field name="model">twh.product.price</field>
         <field name="arch" type="xml">
-            <form string="Product Price">
+            <form string="Harga Produk">
                 <sheet>
                     <group>
                         <group>
@@ -90,65 +116,110 @@
         </field>
     </record>
 
-    <!-- Product Price Search View -->
+    <!-- Search View -->
     <record id="view_twh_product_price_search" model="ir.ui.view">
         <field name="name">twh.product.price.search</field>
         <field name="model">twh.product.price</field>
         <field name="arch" type="xml">
-            <search string="Search Product Prices">
-                <field name="product_id" string="Product"/>
-                <field name="tier_id" string="Tier"/>
+            <search string="Cari Harga Produk">
+                <!-- Search Fields -->
+                <field name="product_id" string="Produk"/>
+                <field name="tier_id" string="Kategori"/>
+                
                 <separator/>
-                <filter string="Bayu" name="bayu" domain="[('tier_code', '=', 'bayu')]"/>
-                <filter string="Dealer" name="dealer" domain="[('tier_code', '=', 'dealer')]"/>
-                <filter string="Harga A" name="price_a" domain="[('tier_code', '=', 'price_a')]"/>
-                <filter string="Harga B" name="price_b" domain="[('tier_code', '=', 'price_b')]"/>
-                <filter string="HET" name="het" domain="[('tier_code', '=', 'het')]"/>
-                <group expand="0" string="Group By">
-                    <filter string="Product" name="group_product" context="{'group_by': 'product_id'}"/>
-                    <filter string="Tier" name="group_tier" context="{'group_by': 'tier_id'}"/>
+                
+                <!-- Filter by Tier -->
+                <filter string="Bayu" name="bayu" 
+                        domain="[('tier_code', '=', 'bayu')]"/>
+                <filter string="Dealer" name="dealer" 
+                        domain="[('tier_code', '=', 'dealer')]"/>
+                <filter string="Harga A" name="price_a" 
+                        domain="[('tier_code', '=', 'price_a')]"/>
+                <filter string="Harga B" name="price_b" 
+                        domain="[('tier_code', '=', 'price_b')]"/>
+                <filter string="HET" name="het" 
+                        domain="[('tier_code', '=', 'het')]"/>
+                
+                <!-- Group By -->
+                <group expand="0" string="Kelompokkan Berdasarkan">
+                    <filter string="Produk" name="group_product" 
+                            context="{'group_by': 'product_id'}"/>
+                    <filter string="Kategori Harga" name="group_tier" 
+                            context="{'group_by': 'tier_id'}"/>
                 </group>
             </search>
         </field>
     </record>
 
-    <!-- Product Price Action -->
+    <!-- Action -->
     <record id="action_twh_product_price" model="ir.actions.act_window">
-        <field name="name">Product Prices</field>
+        <field name="name">Harga Produk</field>
         <field name="res_model">twh.product.price</field>
         <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Tentukan Harga Produk
+            </p>
+            <p>
+                Setiap produk bisa memiliki harga berbeda untuk setiap 
+                kategori harga (Bayu, Dealer, Harga A, B, atau HET).
+            </p>
+        </field>
     </record>
 
-    <!-- Extend Product Template Form View -->
+    <!-- ========================================
+         EXTEND PRODUCT TEMPLATE FORM VIEW
+         Tambahkan tab TWH Prices di form produk
+         ======================================== -->
+
     <record id="view_product_template_twh_form" model="ir.ui.view">
         <field name="name">product.template.twh.form</field>
         <field name="model">product.template</field>
         <field name="inherit_id" ref="product.product_template_only_form_view"/>
         <field name="arch" type="xml">
+            <!-- Tambahkan page baru setelah general_information -->
             <xpath expr="//page[@name='general_information']" position="after">
-                <page string="TWH Prices" name="twh_prices">
+                <page string="Harga TWH" name="twh_prices">
+                    
+                    <!-- Group: TWH Category -->
                     <group>
-                        <group string="TWH Category">
+                        <group string="Kategori TWH">
                             <field name="twh_category"/>
                             <field name="bike_brand"/>
-                            <field name="bike_model"/>
+                            <field name="bike_model" 
+                                   placeholder="Contoh: NMAX, MX King, Beat"/>
                         </group>
                     </group>
-                    <group string="Price per Tier">
+                    
+                    <!-- Group: Price per Tier -->
+                    <group string="Harga per Kategori">
                         <group>
                             <label for="price_bayu" string="Harga Bayu (Cost)"/>
                             <field name="price_bayu" readonly="1"/>
+                            
                             <label for="price_dealer" string="Harga Dealer"/>
                             <field name="price_dealer" readonly="1"/>
                         </group>
                         <group>
                             <label for="price_a" string="Harga A"/>
                             <field name="price_a" readonly="1"/>
+                            
                             <label for="price_b" string="Harga B"/>
                             <field name="price_b" readonly="1"/>
+                            
                             <label for="price_het" string="HET"/>
                             <field name="price_het" readonly="1"/>
                         </group>
+                    </group>
+                    
+                    <!-- Note -->
+                    <group>
+                        <div class="alert alert-info" role="alert">
+                            <strong>Info:</strong> 
+                            Harga di atas dihitung otomatis dari data harga produk. 
+                            Untuk mengubah harga, gunakan menu 
+                            <strong>Konfigurasi > Harga Produk</strong>.
+                        </div>
                     </group>
                 </page>
             </xpath>

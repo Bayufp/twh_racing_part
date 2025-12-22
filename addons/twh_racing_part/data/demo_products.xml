@@ -1,9 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo noupdate="1">
 
-    <!-- Demo Products Based on Price List -->
+    <!-- ========================================
+         DEMO PRODUCTS
+         Produk contoh beserta harga per tier
+         
+         noupdate="1" = Data demo hanya dibuat saat install
+         ======================================== -->
+
+    <!-- ========================================
+         PRODUCT 1: Gear Ratio KLX
+         ======================================== -->
     
-    <!-- 1. Gear Ratio KLX -->
     <record id="product_gear_klx" model="product.product">
         <field name="name">Gear Ratio Set KLX 12/32+16/30+20/28+20/23+24/24T</field>
         <field name="categ_id" ref="product_category_gear_ratio"/>
@@ -16,34 +24,41 @@
         <field name="twh_category">gear_ratio</field>
     </record>
     
-    <!-- Prices for Gear Ratio KLX -->
+    <!-- Harga untuk Gear Ratio KLX -->
     <record id="price_gear_klx_bayu" model="twh.product.price">
         <field name="product_id" ref="product_gear_klx"/>
         <field name="tier_id" ref="price_tier_bayu"/>
         <field name="price">1750000</field>
     </record>
+    
     <record id="price_gear_klx_dealer" model="twh.product.price">
         <field name="product_id" ref="product_gear_klx"/>
         <field name="tier_id" ref="price_tier_dealer"/>
         <field name="price">1785000</field>
     </record>
+    
     <record id="price_gear_klx_a" model="twh.product.price">
         <field name="product_id" ref="product_gear_klx"/>
         <field name="tier_id" ref="price_tier_a"/>
         <field name="price">1825000</field>
     </record>
+    
     <record id="price_gear_klx_b" model="twh.product.price">
         <field name="product_id" ref="product_gear_klx"/>
         <field name="tier_id" ref="price_tier_b"/>
         <field name="price">1875000</field>
     </record>
+    
     <record id="price_gear_klx_het" model="twh.product.price">
         <field name="product_id" ref="product_gear_klx"/>
         <field name="tier_id" ref="price_tier_het"/>
         <field name="price">2075000</field>
     </record>
 
-    <!-- 2. Gear Ratio RX KING -->
+    <!-- ========================================
+         PRODUCT 2: Gear Ratio RX KING
+         ======================================== -->
+    
     <record id="product_gear_rxking" model="product.product">
         <field name="name">Gear Ratio RX KING 13/32+17/29+19/25+22/24+23/22</field>
         <field name="categ_id" ref="product_category_gear_ratio"/>
@@ -61,28 +76,35 @@
         <field name="tier_id" ref="price_tier_bayu"/>
         <field name="price">1675000</field>
     </record>
+    
     <record id="price_gear_rxking_dealer" model="twh.product.price">
         <field name="product_id" ref="product_gear_rxking"/>
         <field name="tier_id" ref="price_tier_dealer"/>
         <field name="price">1700000</field>
     </record>
+    
     <record id="price_gear_rxking_a" model="twh.product.price">
         <field name="product_id" ref="product_gear_rxking"/>
         <field name="tier_id" ref="price_tier_a"/>
         <field name="price">1750000</field>
     </record>
+    
     <record id="price_gear_rxking_b" model="twh.product.price">
         <field name="product_id" ref="product_gear_rxking"/>
         <field name="tier_id" ref="price_tier_b"/>
         <field name="price">1800000</field>
     </record>
+    
     <record id="price_gear_rxking_het" model="twh.product.price">
         <field name="product_id" ref="product_gear_rxking"/>
         <field name="tier_id" ref="price_tier_het"/>
         <field name="price">1950000</field>
     </record>
 
-    <!-- 3. Crankshaft RX KING 50mm -->
+    <!-- ========================================
+         PRODUCT 3: Crankshaft RX KING 50mm
+         ======================================== -->
+    
     <record id="product_crankshaft_rxking_50" model="product.product">
         <field name="name">Forged Crankshaft RX KING 50mm (std)</field>
         <field name="categ_id" ref="product_category_crankshaft"/>
@@ -100,28 +122,35 @@
         <field name="tier_id" ref="price_tier_bayu"/>
         <field name="price">1425000</field>
     </record>
+    
     <record id="price_crankshaft_rxking_dealer" model="twh.product.price">
         <field name="product_id" ref="product_crankshaft_rxking_50"/>
         <field name="tier_id" ref="price_tier_dealer"/>
         <field name="price">1450000</field>
     </record>
+    
     <record id="price_crankshaft_rxking_a" model="twh.product.price">
         <field name="product_id" ref="product_crankshaft_rxking_50"/>
         <field name="tier_id" ref="price_tier_a"/>
         <field name="price">1500000</field>
     </record>
+    
     <record id="price_crankshaft_rxking_b" model="twh.product.price">
         <field name="product_id" ref="product_crankshaft_rxking_50"/>
         <field name="tier_id" ref="price_tier_b"/>
         <field name="price">1525000</field>
     </record>
+    
     <record id="price_crankshaft_rxking_het" model="twh.product.price">
         <field name="product_id" ref="product_crankshaft_rxking_50"/>
         <field name="tier_id" ref="price_tier_het"/>
         <field name="price">1675000</field>
     </record>
 
-    <!-- 4. Cylinder Block CRF 63mm -->
+    <!-- ========================================
+         PRODUCT 4: Cylinder Block CRF 63mm
+         ======================================== -->
+    
     <record id="product_cylinder_crf_63" model="product.product">
         <field name="name">Cylinder Block Bore Up CRF 63mm (Piston High Dome) Pin 14</field>
         <field name="categ_id" ref="product_category_cylinder"/>
@@ -139,28 +168,35 @@
         <field name="tier_id" ref="price_tier_bayu"/>
         <field name="price">675000</field>
     </record>
+    
     <record id="price_cylinder_crf_dealer" model="twh.product.price">
         <field name="product_id" ref="product_cylinder_crf_63"/>
         <field name="tier_id" ref="price_tier_dealer"/>
         <field name="price">685000</field>
     </record>
+    
     <record id="price_cylinder_crf_a" model="twh.product.price">
         <field name="product_id" ref="product_cylinder_crf_63"/>
         <field name="tier_id" ref="price_tier_a"/>
         <field name="price">700000</field>
     </record>
+    
     <record id="price_cylinder_crf_b" model="twh.product.price">
         <field name="product_id" ref="product_cylinder_crf_63"/>
         <field name="tier_id" ref="price_tier_b"/>
         <field name="price">715000</field>
     </record>
+    
     <record id="price_cylinder_crf_het" model="twh.product.price">
         <field name="product_id" ref="product_cylinder_crf_63"/>
         <field name="tier_id" ref="price_tier_het"/>
         <field name="price">785000</field>
     </record>
 
-    <!-- 5. Blue Roller NMAX -->
+    <!-- ========================================
+         PRODUCT 5: Blue Roller NMAX
+         ======================================== -->
+    
     <record id="product_roller_nmax" model="product.product">
         <field name="name">Blue Roller NMAX/AEROX/M3 7g-13g 20x12</field>
         <field name="categ_id" ref="product_category_roller"/>
@@ -178,21 +214,25 @@
         <field name="tier_id" ref="price_tier_bayu"/>
         <field name="price">66000</field>
     </record>
+    
     <record id="price_roller_nmax_dealer" model="twh.product.price">
         <field name="product_id" ref="product_roller_nmax"/>
         <field name="tier_id" ref="price_tier_dealer"/>
         <field name="price">68000</field>
     </record>
+    
     <record id="price_roller_nmax_a" model="twh.product.price">
         <field name="product_id" ref="product_roller_nmax"/>
         <field name="tier_id" ref="price_tier_a"/>
         <field name="price">70000</field>
     </record>
+    
     <record id="price_roller_nmax_b" model="twh.product.price">
         <field name="product_id" ref="product_roller_nmax"/>
         <field name="tier_id" ref="price_tier_b"/>
         <field name="price">72000</field>
     </record>
+    
     <record id="price_roller_nmax_het" model="twh.product.price">
         <field name="product_id" ref="product_roller_nmax"/>
         <field name="tier_id" ref="price_tier_het"/>

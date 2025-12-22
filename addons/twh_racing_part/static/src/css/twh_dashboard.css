@@ -1,15 +1,22 @@
 /* ===================================================================
-   TWH Racing Part Dashboard Styles - Production Ready
+   TWH Racing Part Dashboard Styles
+   Stylesheet untuk dashboard TWH dengan statistik cards dan charts
    =================================================================== */
 
-/* Container */
+/* ===================================================================
+   CONTAINER
+   =================================================================== */
+
 .twh_dashboard_container {
   padding: 0;
   background-color: #f8f9fa;
   min-height: 100vh;
 }
 
-/* Statistics Cards - Base Styles */
+/* ===================================================================
+   STATISTICS CARDS - BASE STYLES
+   =================================================================== */
+
 .twh-stat-card {
   height: 100%;
   min-height: 150px;
@@ -25,7 +32,10 @@
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
 }
 
-/* Card Content Layout */
+/* ===================================================================
+   CARD CONTENT LAYOUT
+   =================================================================== */
+
 .twh-stat-content {
   padding: 1.5rem;
   display: flex;
@@ -47,7 +57,10 @@
   margin-left: 1rem;
 }
 
-/* Text Styles */
+/* ===================================================================
+   TEXT STYLES
+   =================================================================== */
+
 .twh-stat-label {
   color: #ffffff !important;
   opacity: 0.9;
@@ -72,7 +85,7 @@
   font-size: 1.5rem;
 }
 
-/* NEW: Subtitle untuk card */
+/* Subtitle untuk informasi tambahan di card */
 .twh-stat-subtitle {
   color: #ffffff !important;
   opacity: 0.75;
@@ -86,7 +99,11 @@
   color: #ffffff !important;
 }
 
-/* Card Color Gradients */
+/* ===================================================================
+   CARD COLOR GRADIENTS
+   Setiap card punya gradient warna berbeda
+   =================================================================== */
+
 .twh-card-purple {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
 }
@@ -103,79 +120,31 @@
   background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important;
 }
 
-/* Chart Container */
+/* ===================================================================
+   CHART CONTAINER
+   =================================================================== */
+
 #monthly_sales {
   width: 100%;
   height: 350px;
 }
 
-/* General Card Styles */
+/* ===================================================================
+   GENERAL CARD STYLES
+   Fix untuk card yang tidak muncul
+   =================================================================== */
+
 .card {
   display: block !important;
   visibility: visible !important;
   opacity: 1 !important;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .twh-stat-card {
-    margin-bottom: 1rem;
-  }
+/* ===================================================================
+   PERIOD FILTER DROPDOWN
+   Dropdown untuk filter periode revenue
+   =================================================================== */
 
-  .twh-stat-value {
-    font-size: 2rem !important;
-  }
-
-  .twh-stat-revenue {
-    font-size: 1.2rem !important;
-  }
-
-  .twh-stat-icon {
-    font-size: 2rem;
-  }
-
-  .twh-stat-content {
-    padding: 1.25rem;
-  }
-
-  .twh-stat-subtitle {
-    font-size: 0.6rem;
-  }
-}
-
-@media (max-width: 576px) {
-  .twh-stat-value {
-    font-size: 1.75rem !important;
-  }
-
-  .twh-stat-label {
-    font-size: 0.65rem;
-  }
-
-  .twh-stat-subtitle {
-    font-size: 0.55rem;
-  }
-}
-
-/* Ensure proper spacing */
-.row {
-  margin-left: 0;
-  margin-right: 0;
-}
-
-/* Remove duplicate styles and conflicts */
-.card-body h2,
-.card-body h6 {
-  margin-bottom: 0.5rem;
-}
-
-/* Icon display fix */
-.card-body i,
-.twh-stat-icon i {
-  display: inline-block;
-}
-
-/* Period Filter Dropdown Style */
 .twh-period-filter {
   background: rgba(255, 255, 255, 0.2);
   color: #ffffff;
@@ -207,10 +176,70 @@
   padding: 8px;
 }
 
-/* Responsive untuk filter */
+/* ===================================================================
+   RESPONSIVE DESIGN
+   =================================================================== */
+
 @media (max-width: 768px) {
+  .twh-stat-card {
+    margin-bottom: 1rem;
+  }
+
+  .twh-stat-value {
+    font-size: 2rem !important;
+  }
+
+  .twh-stat-revenue {
+    font-size: 1.2rem !important;
+  }
+
+  .twh-stat-icon {
+    font-size: 2rem;
+  }
+
+  .twh-stat-content {
+    padding: 1.25rem;
+  }
+
+  .twh-stat-subtitle {
+    font-size: 0.6rem;
+  }
+
   .twh-period-filter {
     font-size: 0.6rem;
     padding: 3px 6px;
   }
+}
+
+@media (max-width: 576px) {
+  .twh-stat-value {
+    font-size: 1.75rem !important;
+  }
+
+  .twh-stat-label {
+    font-size: 0.65rem;
+  }
+
+  .twh-stat-subtitle {
+    font-size: 0.55rem;
+  }
+}
+
+/* ===================================================================
+   UTILITY CLASSES
+   =================================================================== */
+
+.row {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.card-body h2,
+.card-body h6 {
+  margin-bottom: 0.5rem;
+}
+
+.card-body i,
+.twh-stat-icon i {
+  display: inline-block;
 }

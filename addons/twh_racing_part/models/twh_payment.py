@@ -1,26 +1,33 @@
 # -*- coding: utf-8 -*-
 
-from odoo import models, fields, api, _
+from odoo import api, fields, models, _
 from odoo.exceptions import UserError, ValidationError
 
 
 class TwhPayment(models.Model):
     """
-    Model Payment TWH Racing Part
-    Untuk tracking pembayaran (cicilan/lunas) dari invoice
+    Model untuk mencatat pembayaran invoice.
+    
+    Model ini digunakan untuk tracking pembayaran dari customer, baik pembayaran
+    penuh maupun cicilan. Setiap pembayaran akan otomatis update status invoice.
     """
     _name = 'twh.payment'
-    _description = 'TWH Payment Record'
+    _description = 'Catatan Pembayaran Invoice'
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = 'payment_date desc, id desc'
     
-    # Basic Info
+    # ========================
+    # FIELDS
+    # ========================
+    
+    # Informasi Dasar
     name = fields.Char(
-        string='Payment Reference',
+        string='Nomor Referensi',
         required=True,
         copy=False,
         default='New',
-        tracking=True
+        tracking=True,
+        help='Nomor referensi pembayaran (auto-generated)'
     )
     
     invoice_id = fields.Many2one(
@@ -28,29 +35,33 @@ class TwhPayment(models.Model):
         string='Invoice',
         required=True,
         ondelete='cascade',
-        tracking=True
+        tracking=True,
+        help='Invoice yang dibayar'
     )
     
     partner_id = fields.Many2one(
         related='invoice_id.partner_id',
         string='Customer',
         store=True,
-        readonly=True
+        readonly=True,
+        help='Customer yang melakukan pembayaran'
     )
     
-    # Payment Details
+    # Detail Pembayaran
     payment_date = fields.Date(
-        string='Payment Date',
+        string='Tanggal Bayar',
         required=True,
         default=fields.Date.today,
-        tracking=True
+        tracking=True,
+        help='Tanggal pembayaran diterima'
     )
     
     amount = fields.Monetary(
-        string='Payment Amount',
+        string='Jumlah Bayar',
         required=True,
         currency_field='currency_id',
-        tracking=True
+        tracking=True,
+        help='Jumlah uang yang dibayarkan'
     )
     
     payment_method = fields.Selection([
@@ -58,127 +69,181 @@ class TwhPayment(models.Model):
         ('bank_mandiri', 'Transfer Mandiri'),
         ('bank_bni', 'Transfer BNI'),
         ('bank_bri', 'Transfer BRI'),
-        ('cash', 'Cash'),
+        ('cash', 'Tunai'),
         ('giro', 'Giro'),
-        ('other', 'Other'),
-    ], string='Payment Method', required=True, default='bank_bca', tracking=True)
+        ('other', 'Lainnya'),
+    ], string='Metode Pembayaran', required=True, default='bank_bca', tracking=True,
+       help='Cara pembayaran yang digunakan')
     
     note = fields.Text(
-        string='Note',
-        help='e.g., Cicilan 1, DP 30%, Pelunasan, etc.'
+        string='Catatan',
+        help='Keterangan pembayaran (misal: Cicilan 1, DP 30%, Pelunasan, dll)'
     )
     
+    # Bukti Transfer
     proof_file = fields.Binary(
-        string='Proof of Payment',
+        string='Bukti Pembayaran',
         attachment=True,
-        help='Upload bukti transfer (JPG, PNG, PDF)'
+        help='Upload bukti transfer (JPG, PNG, atau PDF)'
     )
     
-    proof_filename = fields.Char(string='Filename')
+    proof_filename = fields.Char(
+        string='Nama File'
+    )
     
-    # Related Info
+    # Informasi Tambahan
     currency_id = fields.Many2one(
         related='invoice_id.currency_id',
-        string='Currency'
+        string='Mata Uang'
     )
     
     recorded_by = fields.Many2one(
         'res.users',
-        string='Recorded By',
+        string='Dicatat Oleh',
         default=lambda self: self.env.user,
-        readonly=True
+        readonly=True,
+        help='User yang mencatat pembayaran ini'
     )
     
     company_id = fields.Many2one(
         related='invoice_id.company_id',
-        string='Company',
+        string='Perusahaan',
         store=True
     )
     
-    # State
+    # Status
     state = fields.Selection([
         ('draft', 'Draft'),
-        ('confirmed', 'Confirmed'),
-        ('cancelled', 'Cancelled'),
-    ], string='Status', default='draft', tracking=True)
+        ('confirmed', 'Dikonfirmasi'),
+        ('cancelled', 'Dibatalkan'),
+    ], string='Status', default='draft', tracking=True,
+       help='Status pembayaran')
+    
+    # ========================
+    # CRUD METHODS
+    # ========================
     
     @api.model
     def create(self, vals):
+        """
+        Override create untuk:
+        1. Generate nomor referensi otomatis
+        2. Auto-confirm pembayaran setelah dibuat
+        """
+        # Generate nomor referensi
         if vals.get('name', 'New') == 'New':
             vals['name'] = self.env['ir.sequence'].next_by_code('twh.payment') or 'New'
         
+        # Buat record payment
         payment = super(TwhPayment, self).create(vals)
         
-        # Auto-confirm payment
+        # Langsung konfirmasi payment
         payment.action_confirm()
         
         return payment
     
     def write(self, vals):
-        res = super(TwhPayment, self).write(vals)
+        """
+        Override write untuk update status invoice saat payment berubah.
+        """
+        result = super(TwhPayment, self).write(vals)
         
-        # Recalculate invoice payment status if amount changed
+        # Jika amount atau state berubah, recalculate invoice payment status
         if 'amount' in vals or 'state' in vals:
             for payment in self:
                 payment.invoice_id._compute_payment_status()
         
-        return res
+        return result
     
     def unlink(self):
-        # Store invoice IDs before deleting
-        invoice_ids = self.mapped('invoice_id')
+        """
+        Override unlink untuk update status invoice setelah payment dihapus.
+        """
+        # Simpan dulu invoice yang terkait
+        invoices = self.mapped('invoice_id')
         
-        res = super(TwhPayment, self).unlink()
+        # Hapus payment
+        result = super(TwhPayment, self).unlink()
         
-        # Recalculate invoice payment status
-        for invoice in invoice_ids:
+        # Update status invoice
+        for invoice in invoices:
             invoice._compute_payment_status()
         
-        return res
+        return result
+    
+    # ========================
+    # ACTION METHODS
+    # ========================
     
     def action_confirm(self):
-        """Confirm payment and update invoice"""
+        """
+        Konfirmasi pembayaran.
+        
+        Saat dikonfirmasi:
+        1. Status payment jadi 'confirmed'
+        2. Status invoice di-update otomatis
+        3. Notifikasi dikirim ke invoice
+        """
         for payment in self:
+            # Skip jika sudah confirmed
             if payment.state != 'draft':
                 continue
             
-            # Validate amount
+            # Validasi 1: Jumlah harus lebih dari 0
             if payment.amount <= 0:
-                raise ValidationError(_('Payment amount must be greater than zero!'))
+                raise ValidationError(_('Jumlah pembayaran harus lebih dari 0!'))
             
-            # Check if payment exceeds remaining amount
+            # Validasi 2: Tidak boleh melebihi sisa tagihan
             if payment.amount > payment.invoice_id.remaining_amount:
                 raise ValidationError(
-                    _('Payment amount (%(amount)s) cannot exceed remaining balance (%(remaining)s)!') % {
-                        'amount': payment.amount,
+                    _('Jumlah pembayaran (%(paid)s) tidak boleh melebihi sisa tagihan (%(remaining)s)!') % {
+                        'paid': payment.amount,
                         'remaining': payment.invoice_id.remaining_amount
                     }
                 )
             
+            # Update status payment
             payment.write({'state': 'confirmed'})
             
-            # Update invoice payment status
+            # Update status invoice (via computed field)
             payment.invoice_id._compute_payment_status()
             
-            # Post message to invoice
+            # Kirim notifikasi ke invoice
             payment.invoice_id.message_post(
-                body=_('Payment received: %s - %s') % (
+                body=_('Pembayaran diterima: %s via %s') % (
                     payment.amount,
-                    payment.payment_method
+                    dict(payment._fields['payment_method'].selection).get(payment.payment_method)
                 )
             )
     
     def action_cancel(self):
-        """Cancel payment"""
+        """
+        Batalkan pembayaran.
+        
+        Saat dibatalkan:
+        1. Status payment jadi 'cancelled'
+        2. Status invoice di-update (kembalikan sisa tagihan)
+        3. Notifikasi dikirim ke invoice
+        """
         for payment in self:
+            # Update status
             payment.write({'state': 'cancelled'})
+            
+            # Update status invoice
             payment.invoice_id._compute_payment_status()
+            
+            # Kirim notifikasi
             payment.invoice_id.message_post(
-                body=_('Payment cancelled: %s') % payment.name
+                body=_('Pembayaran dibatalkan: %s') % payment.name
             )
+    
+    # ========================
+    # CONSTRAINTS
+    # ========================
     
     @api.constrains('amount')
     def _check_amount(self):
+        """Validasi jumlah pembayaran harus lebih dari 0."""
         for payment in self:
             if payment.amount <= 0:
-                raise ValidationError(_('Payment amount must be greater than zero!'))
+                raise ValidationError(_('Jumlah pembayaran harus lebih dari 0!'))

@@ -1,7 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo noupdate="1">
 
-    <!-- Demo Customers -->
+    <!-- ========================================
+         DEMO DATA
+         Data contoh untuk testing dan demo
+         
+         noupdate="1" = Data demo hanya dibuat saat install
+         ======================================== -->
+
+    <!-- ========================================
+         DEMO CUSTOMERS
+         ======================================== -->
+
     <record id="partner_toko_jaya" model="res.partner">
         <field name="name">Toko Jaya Motor</field>
         <field name="is_company">True</field>
@@ -38,10 +48,13 @@
         <field name="street">Jl. MT Haryono No. 789</field>
         <field name="city">Tangerang</field>
         <field name="phone">021-55556666</field>
-        <field name="email">cs@sentsosamotor.com</field>
+        <field name="email">cs@sentosamotor.com</field>
     </record>
 
-    <!-- Demo Sales Users -->
+    <!-- ========================================
+         DEMO SALES USERS
+         ======================================== -->
+
     <record id="user_sales_andi" model="res.users">
         <field name="name">Andi Wijaya (Sales)</field>
         <field name="login">sales.andi</field>
@@ -56,7 +69,10 @@
         <field name="groups_id" eval="[(4, ref('twh_racing_part.group_twh_sales'))]"/>
     </record>
 
-    <!-- Demo Invoice 1 -->
+    <!-- ========================================
+         DEMO INVOICE 1
+         ======================================== -->
+
     <record id="demo_invoice_1" model="twh.invoice">
         <field name="name">TWH/INV/2025/00001</field>
         <field name="partner_id" ref="partner_toko_jaya"/>
@@ -68,7 +84,7 @@
         <field name="state">confirmed</field>
     </record>
 
-    <!-- Invoice Lines for Invoice 1 -->
+    <!-- Invoice Lines untuk Invoice 1 -->
     <record id="demo_invoice_1_line_1" model="twh.invoice.line">
         <field name="invoice_id" ref="demo_invoice_1"/>
         <field name="product_id" ref="product_gear_klx"/>
@@ -85,7 +101,10 @@
         <field name="price_unit">70000</field>
     </record>
 
-    <!-- Demo Invoice 2 -->
+    <!-- ========================================
+         DEMO INVOICE 2
+         ======================================== -->
+
     <record id="demo_invoice_2" model="twh.invoice">
         <field name="name">TWH/INV/2025/00002</field>
         <field name="partner_id" ref="partner_toko_makmur"/>
@@ -97,7 +116,7 @@
         <field name="state">confirmed</field>
     </record>
 
-    <!-- Invoice Lines for Invoice 2 -->
+    <!-- Invoice Lines untuk Invoice 2 -->
     <record id="demo_invoice_2_line_1" model="twh.invoice.line">
         <field name="invoice_id" ref="demo_invoice_2"/>
         <field name="product_id" ref="product_crankshaft_rxking_50"/>
@@ -114,7 +133,10 @@
         <field name="price_unit">715000</field>
     </record>
 
-    <!-- Demo Invoice 3 (Recent) -->
+    <!-- ========================================
+         DEMO INVOICE 3 (Recent)
+         ======================================== -->
+
     <record id="demo_invoice_3" model="twh.invoice">
         <field name="name">TWH/INV/2025/00003</field>
         <field name="partner_id" ref="partner_dealer_sentosa"/>
@@ -126,7 +148,7 @@
         <field name="state">confirmed</field>
     </record>
 
-    <!-- Invoice Lines for Invoice 3 -->
+    <!-- Invoice Lines untuk Invoice 3 -->
     <record id="demo_invoice_3_line_1" model="twh.invoice.line">
         <field name="invoice_id" ref="demo_invoice_3"/>
         <field name="product_id" ref="product_gear_rxking"/>

@@ -1,52 +1,79 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- Commission Tree View -->
+    <!-- ========================================
+         SALES COMMISSION VIEWS
+         ======================================== -->
+
+    <!-- Tree View -->
     <record id="view_twh_sales_commission_tree" model="ir.ui.view">
         <field name="name">twh.sales.commission.tree</field>
         <field name="model">twh.sales.commission</field>
         <field name="arch" type="xml">
-            <tree string="Sales Commission" decoration-success="state=='paid'">
+            <tree string="Komisi Sales" decoration-success="state=='paid'">
+                <!-- Kolom Basic Info -->
                 <field name="date"/>
                 <field name="invoice_name"/>
                 <field name="sales_person_id"/>
                 <field name="product_id"/>
+                
+                <!-- Kolom Quantity & Price -->
                 <field name="quantity"/>
                 <field name="cost_price" widget="monetary" optional="hide"/>
                 <field name="selling_price" widget="monetary" optional="hide"/>
                 <field name="margin" widget="monetary"/>
-                <field name="commission_amount" widget="monetary" sum="Total Commission"/>
+                
+                <!-- Kolom Commission -->
+                <field name="commission_amount" widget="monetary" sum="Total Komisi"/>
+                
+                <!-- Kolom Status -->
                 <field name="state" widget="badge" 
                        decoration-info="state=='draft'"
                        decoration-warning="state=='confirmed'"
                        decoration-success="state=='paid'"/>
+                
                 <field name="currency_id" column_invisible="1"/>
             </tree>
         </field>
     </record>
 
-    <!-- Commission Form View -->
+    <!-- Form View -->
     <record id="view_twh_sales_commission_form" model="ir.ui.view">
         <field name="name">twh.sales.commission.form</field>
         <field name="model">twh.sales.commission</field>
         <field name="arch" type="xml">
-            <form string="Sales Commission">
+            <form string="Komisi Sales">
+                
+                <!-- Header dengan Buttons & Status -->
                 <header>
-                    <button name="action_confirm" string="Confirm" type="object" 
-                            class="oe_highlight" invisible="state != 'draft'"/>
-                    <button name="action_mark_paid" string="Mark as Paid" type="object" 
-                            class="oe_highlight" invisible="state != 'confirmed'"/>
+                    <!-- Button: Confirm -->
+                    <button name="action_confirm" 
+                            string="Konfirmasi" 
+                            type="object" 
+                            class="oe_highlight" 
+                            invisible="state != 'draft'"/>
+                    
+                    <!-- Button: Mark as Paid -->
+                    <button name="action_mark_paid" 
+                            string="Tandai Sudah Dibayar" 
+                            type="object" 
+                            class="oe_highlight" 
+                            invisible="state != 'confirmed'"/>
+                    
+                    <!-- Status Bar -->
                     <field name="state" widget="statusbar"/>
                 </header>
+                
                 <sheet>
+                    <!-- Group: Main Information -->
                     <group>
-                        <group>
+                        <group string="Informasi Invoice">
                             <field name="invoice_id" readonly="1"/>
                             <field name="sales_person_id" readonly="1"/>
                             <field name="product_id" readonly="1"/>
                             <field name="date" readonly="1"/>
                         </group>
-                        <group>
+                        <group string="Detail Perhitungan">
                             <field name="quantity" readonly="1"/>
                             <field name="cost_price" widget="monetary" readonly="1"/>
                             <field name="selling_price" widget="monetary" readonly="1"/>
@@ -55,12 +82,17 @@
                             <field name="currency_id" invisible="1"/>
                         </group>
                     </group>
+                    
+                    <!-- Group: Payment Information -->
                     <group>
-                        <group>
-                            <field name="payment_date" readonly="state != 'confirmed'"/>
+                        <group string="Informasi Pembayaran Komisi">
+                            <field name="payment_date" 
+                                   readonly="state != 'confirmed'"/>
                         </group>
                         <group>
-                            <field name="payment_notes" readonly="state == 'paid'"/>
+                            <field name="payment_notes" 
+                                   readonly="state == 'paid'"
+                                   placeholder="Catatan pembayaran komisi..."/>
                         </group>
                     </group>
                 </sheet>
@@ -68,42 +100,61 @@
         </field>
     </record>
 
-    <!-- Commission Search View -->
+    <!-- Search View -->
     <record id="view_twh_sales_commission_search" model="ir.ui.view">
         <field name="name">twh.sales.commission.search</field>
         <field name="model">twh.sales.commission</field>
         <field name="arch" type="xml">
-            <search string="Search Commission">
+            <search string="Cari Komisi">
+                <!-- Search Fields -->
                 <field name="invoice_name" string="Invoice"/>
                 <field name="sales_person_id" string="Sales Person"/>
-                <field name="product_id" string="Product"/>
+                <field name="product_id" string="Produk"/>
+                
                 <separator/>
-                <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
-                <filter string="Confirmed" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
-                <filter string="Paid" name="paid" domain="[('state', '=', 'paid')]"/>
+                
+                <!-- Filter by State -->
+                <filter string="Draft" name="draft" 
+                        domain="[('state', '=', 'draft')]"/>
+                <filter string="Dikonfirmasi" name="confirmed" 
+                        domain="[('state', '=', 'confirmed')]"/>
+                <filter string="Sudah Dibayar" name="paid" 
+                        domain="[('state', '=', 'paid')]"/>
+                
                 <separator/>
-                <filter string="My Commission" name="my_commission" 
+                
+                <!-- My Commission -->
+                <filter string="Komisi Saya" name="my_commission" 
                         domain="[('sales_person_id', '=', uid)]"/>
+                
                 <separator/>
-                <filter string="This Month" name="this_month" 
+                
+                <!-- Date Filter -->
+                <filter string="Bulan Ini" name="this_month" 
                         domain="[('date', '&gt;=', (context_today() - relativedelta(day=1)).strftime('%Y-%m-%d')),
                                  ('date', '&lt;=', (context_today() + relativedelta(day=31)).strftime('%Y-%m-%d'))]"/>
-                <group expand="0" string="Group By">
-                    <filter string="Sales Person" name="group_sales" context="{'group_by': 'sales_person_id'}"/>
-                    <filter string="Product" name="group_product" context="{'group_by': 'product_id'}"/>
-                    <filter string="State" name="group_state" context="{'group_by': 'state'}"/>
-                    <filter string="Date" name="group_date" context="{'group_by': 'date'}"/>
+                
+                <!-- Group By -->
+                <group expand="0" string="Kelompokkan Berdasarkan">
+                    <filter string="Sales Person" name="group_sales" 
+                            context="{'group_by': 'sales_person_id'}"/>
+                    <filter string="Produk" name="group_product" 
+                            context="{'group_by': 'product_id'}"/>
+                    <filter string="Status" name="group_state" 
+                            context="{'group_by': 'state'}"/>
+                    <filter string="Tanggal" name="group_date" 
+                            context="{'group_by': 'date'}"/>
                 </group>
             </search>
         </field>
     </record>
 
-    <!-- Commission Pivot View -->
+    <!-- Pivot View -->
     <record id="view_twh_sales_commission_pivot" model="ir.ui.view">
         <field name="name">twh.sales.commission.pivot</field>
         <field name="model">twh.sales.commission</field>
         <field name="arch" type="xml">
-            <pivot string="Commission Analysis">
+            <pivot string="Analisis Komisi">
                 <field name="sales_person_id" type="row"/>
                 <field name="date" interval="month" type="col"/>
                 <field name="commission_amount" type="measure"/>
@@ -112,45 +163,49 @@
         </field>
     </record>
 
-    <!-- Commission Graph View -->
+    <!-- Graph View -->
     <record id="view_twh_sales_commission_graph" model="ir.ui.view">
         <field name="name">twh.sales.commission.graph</field>
         <field name="model">twh.sales.commission</field>
         <field name="arch" type="xml">
-            <graph string="Commission Analysis" type="bar">
+            <graph string="Grafik Komisi" type="bar">
                 <field name="sales_person_id"/>
                 <field name="commission_amount" type="measure"/>
             </graph>
         </field>
     </record>
 
-    <!-- Commission Action -->
+    <!-- Action -->
     <record id="action_twh_sales_commission" model="ir.actions.act_window">
-        <field name="name">Sales Commission</field>
+        <field name="name">Komisi Sales</field>
         <field name="res_model">twh.sales.commission</field>
         <field name="view_mode">tree,form,pivot,graph</field>
         <field name="context">{'search_default_confirmed': 1, 'search_default_my_commission': 1}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
-                No commission records yet
+                Belum Ada Catatan Komisi
             </p>
             <p>
-                Commission will be automatically created when invoices are confirmed.
+                Komisi akan dibuat otomatis saat invoice dikonfirmasi.
             </p>
         </field>
     </record>
 
-    <!-- Commission Report Wizard Form View -->
+    <!-- ========================================
+         COMMISSION REPORT WIZARD VIEWS
+         ======================================== -->
+
+    <!-- Wizard Form View -->
     <record id="view_twh_commission_wizard_form" model="ir.ui.view">
         <field name="name">twh.commission.report.wizard.form</field>
         <field name="model">twh.commission.report.wizard</field>
         <field name="arch" type="xml">
-            <form string="Commission Report">
+            <form string="Laporan Komisi">
                 <group>
                     <group>
                         <field name="period_type" required="1"/>
                         <field name="sales_person_id" 
-                               placeholder="All Sales Persons"/>
+                               placeholder="Semua Sales Person"/>
                     </group>
                     <group>
                         <field name="date_from" required="1" 
@@ -159,24 +214,36 @@
                                invisible="period_type != 'custom'"/>
                     </group>
                 </group>
-                <group string="Date Range Summary" invisible="period_type == 'custom'">
-                    <field name="date_from" readonly="1" string="From"/>
-                    <field name="date_to" readonly="1" string="To"/>
+                
+                <!-- Summary Date Range -->
+                <group string="Ringkasan Periode" 
+                       invisible="period_type == 'custom'">
+                    <field name="date_from" readonly="1" string="Dari"/>
+                    <field name="date_to" readonly="1" string="Sampai"/>
                 </group>
+                
                 <footer>
-                    <button string="Print Report" name="action_print_report" 
-                            type="object" class="oe_highlight"/>
-                    <button string="Export Excel" name="action_export_excel" 
+                    <!-- Button: Print Report -->
+                    <button string="Cetak Laporan" 
+                            name="action_print_report" 
+                            type="object" 
+                            class="oe_highlight"/>
+                    
+                    <!-- Button: Export Excel -->
+                    <button string="Export Excel" 
+                            name="action_export_excel" 
                             type="object"/>
-                    <button string="Cancel" special="cancel"/>
+                    
+                    <!-- Button: Cancel -->
+                    <button string="Batal" special="cancel"/>
                 </footer>
             </form>
         </field>
     </record>
 
-    <!-- Commission Report Wizard Action -->
+    <!-- Wizard Action -->
     <record id="action_twh_commission_wizard" model="ir.actions.act_window">
-        <field name="name">Commission Reports</field>
+        <field name="name">Laporan Komisi</field>
         <field name="res_model">twh.commission.report.wizard</field>
         <field name="view_mode">form</field>
         <field name="target">new</field>

@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+    <!-- ========================================
+         REPORT ACTIONS
+         Definisi action untuk print reports
+         ======================================== -->
+
     <!-- Invoice Report Action -->
     <record id="action_report_twh_invoice" model="ir.actions.report">
-        <field name="name">TWH Invoice</field>
+        <field name="name">Invoice TWH</field>
         <field name="model">twh.invoice</field>
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">twh_racing_part.report_twh_invoice_document</field>
@@ -15,12 +20,12 @@
 
     <!-- Sales Commission Report Action -->
     <record id="action_report_sales_commission" model="ir.actions.report">
-        <field name="name">Sales Commission Report</field>
+        <field name="name">Laporan Komisi Sales</field>
         <field name="model">twh.commission.report.wizard</field>
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">twh_racing_part.report_sales_commission_document</field>
         <field name="report_file">twh_racing_part.report_sales_commission_document</field>
-        <field name="print_report_name">'Commission-Report-%s' % (time.strftime('%Y%m%d'))</field>
+        <field name="print_report_name">'Laporan-Komisi-%s' % (time.strftime('%Y%m%d'))</field>
     </record>
 
 </odoo>

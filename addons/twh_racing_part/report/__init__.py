@@ -1,4 +1,11 @@
 # -*- coding: utf-8 -*-
 
-# Empty init file for report module
-# Reports are defined in XML templates
+"""
+Report package untuk TWH Racing Part module.
+
+Package ini berisi template untuk print reports:
+- Invoice report (PDF)
+- Sales commission report (PDF)
+"""
+
+# Report templates ada di XML files, tidak perlu import Python

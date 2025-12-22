@@ -1,23 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- Invoice Tree View -->
+    <!-- ========================================
+         TWH INVOICE VIEWS
+         ======================================== -->
+
+    <!-- Tree View -->
     <record id="view_twh_invoice_tree" model="ir.ui.view">
         <field name="name">twh.invoice.tree</field>
         <field name="model">twh.invoice</field>
         <field name="arch" type="xml">
-            <tree string="TWH Invoices" decoration-info="state=='draft'" 
+            <tree string="Invoice TWH" 
+                  decoration-info="state=='draft'" 
                   decoration-warning="state=='partial'"
                   decoration-success="state=='paid'" 
                   decoration-danger="state=='overdue'">
+                
+                <!-- Kolom Basic Info -->
                 <field name="name"/>
                 <field name="date_invoice"/>
                 <field name="partner_id"/>
                 <field name="payment_type" widget="badge"/>
+                
+                <!-- Kolom Financial -->
                 <field name="total" widget="monetary"/>
                 <field name="paid_amount" widget="monetary"/>
                 <field name="remaining_amount" widget="monetary"/>
                 <field name="payment_progress" widget="progressbar"/>
+                
+                <!-- Kolom Due Date & Status -->
                 <field name="date_due"/>
                 <field name="state" widget="badge" 
                        decoration-info="state=='draft'"
@@ -28,70 +39,108 @@
         </field>
     </record>
 
-    <!-- Invoice Form View -->
+    <!-- Form View -->
     <record id="view_twh_invoice_form" model="ir.ui.view">
         <field name="name">twh.invoice.form</field>
         <field name="model">twh.invoice</field>
         <field name="arch" type="xml">
-            <form string="TWH Invoice">
+            <form string="Invoice TWH">
+                
+                <!-- Header dengan Buttons & Status -->
                 <header>
-                    <button name="action_confirm" string="Confirm" type="object" 
-                            class="oe_highlight" invisible="state != 'draft'"/>
-                    <button name="action_add_payment" string="Record Payment" type="object" 
+                    <!-- Button: Confirm Invoice -->
+                    <button name="action_confirm" 
+                            string="Konfirmasi" 
+                            type="object" 
+                            class="oe_highlight" 
+                            invisible="state != 'draft'"/>
+                    
+                    <!-- Button: Record Payment -->
+                    <button name="action_add_payment" 
+                            string="Catat Pembayaran" 
+                            type="object" 
                             class="oe_highlight" 
                             invisible="state not in ['confirmed', 'partial', 'overdue'] or remaining_amount &lt;= 0"/>
-                    <button name="action_mark_paid" string="Mark as Paid" type="object" 
+                    
+                    <!-- Button: Mark as Paid -->
+                    <button name="action_mark_paid" 
+                            string="Tandai Lunas" 
+                            type="object" 
                             invisible="state not in ['confirmed', 'overdue']"/>
-                    <button name="action_print_invoice" string="Print Invoice" type="object" 
+                    
+                    <!-- Button: Print Invoice -->
+                    <button name="action_print_invoice" 
+                            string="Cetak Invoice" 
+                            type="object" 
                             invisible="state == 'draft'"/>
-                    <button name="action_cancel" string="Cancel" type="object" 
+                    
+                    <!-- Button: Cancel -->
+                    <button name="action_cancel" 
+                            string="Batalkan" 
+                            type="object" 
                             invisible="state in ['cancelled', 'paid']" 
-                            confirm="Are you sure you want to cancel this invoice?"/>
-                    <button name="action_set_to_draft" string="Set to Draft" type="object" 
+                            confirm="Yakin ingin membatalkan invoice ini?"/>
+                    
+                    <!-- Button: Set to Draft -->
+                    <button name="action_set_to_draft" 
+                            string="Kembalikan ke Draft" 
+                            type="object" 
                             invisible="state not in ['cancelled']"/>
+                    
+                    <!-- Status Bar -->
                     <field name="state" widget="statusbar" 
                            statusbar_visible="draft,confirmed,paid"/>
                 </header>
+                
                 <sheet>
+                    <!-- Smart Buttons -->
                     <div class="oe_button_box" name="button_box">
-                        <button name="action_view_payments" type="object" 
-                                class="oe_stat_button" icon="fa-money"
+                        <!-- Button: View Payments -->
+                        <button name="action_view_payments" 
+                                type="object" 
+                                class="oe_stat_button" 
+                                icon="fa-money"
                                 invisible="payment_count == 0">
-                            <field name="payment_count" widget="statinfo" string="Payments"/>
+                            <field name="payment_count" widget="statinfo" string="Pembayaran"/>
                         </button>
-                        <button name="action_print_invoice" type="object" 
-                                class="oe_stat_button" icon="fa-file-pdf-o" 
+                        
+                        <!-- Button: Print Invoice -->
+                        <button name="action_print_invoice" 
+                                type="object" 
+                                class="oe_stat_button" 
+                                icon="fa-file-pdf-o" 
                                 invisible="state == 'draft'">
                             <div class="o_stat_info">
-                                <span class="o_stat_text">Print</span>
+                                <span class="o_stat_text">Cetak</span>
                                 <span class="o_stat_text">Invoice</span>
                             </div>
                         </button>
                     </div>
                     
+                    <!-- Title: Invoice Number -->
                     <div class="oe_title">
                         <h1>
                             <field name="name" readonly="1"/>
                         </h1>
                     </div>
 
-                    <!-- Payment Status Alert (FIXED - NO OWL) -->
+                    <!-- Alert: Payment Status -->
                     <div class="alert alert-info" role="alert" 
                          invisible="state not in ['confirmed', 'partial', 'overdue'] or payment_type != 'tempo'">
-                        <h5>Payment Status</h5>
+                        <h5>Status Pembayaran</h5>
                         <div class="row">
                             <div class="col-md-3">
                                 <strong>Total Invoice:</strong><br/>
                                 <field name="total" widget="monetary" readonly="1" nolabel="1"/>
                             </div>
                             <div class="col-md-3">
-                                <strong>Paid Amount:</strong><br/>
+                                <strong>Sudah Dibayar:</strong><br/>
                                 <span class="text-success">
                                     <field name="paid_amount" widget="monetary" readonly="1" nolabel="1"/>
                                 </span>
                             </div>
                             <div class="col-md-3">
-                                <strong>Remaining:</strong><br/>
+                                <strong>Sisa Tagihan:</strong><br/>
                                 <span class="text-danger">
                                     <field name="remaining_amount" widget="monetary" readonly="1" nolabel="1"/>
                                 </span>
@@ -103,54 +152,73 @@
                         </div>
                     </div>
                     
+                    <!-- Group: Main Information -->
                     <group>
-                        <group name="customer_info">
+                        <!-- Column 1: Customer Info -->
+                        <group name="customer_info" string="Informasi Customer">
                             <field name="partner_id" 
                                    domain="[('is_company', '=', True)]"
                                    required="1"
-                                   readonly="state != 'draft'"/>
+                                   readonly="state != 'draft'"
+                                   placeholder="Pilih customer atau toko"/>
+                            
                             <field name="date_invoice" 
                                    required="1"
                                    readonly="state != 'draft'"/>
+                            
                             <field name="payment_type" 
                                    widget="radio"
                                    required="1"
                                    readonly="state != 'draft'"/>
+                            
                             <field name="payment_term_days" 
                                    readonly="state != 'draft' or payment_type == 'cash'"
                                    invisible="payment_type == 'cash'"/>
-                            <field name="date_due" readonly="1" 
+                            
+                            <field name="date_due" 
+                                   readonly="1" 
                                    invisible="payment_type == 'cash'"/>
                         </group>
-                        <group name="sales_info">
+                        
+                        <!-- Column 2: Sales Info -->
+                        <group name="sales_info" string="Informasi Penjualan">
                             <field name="sales_person_id" 
                                    required="1"
-                                   readonly="state != 'draft'"/>
+                                   readonly="state != 'draft'"
+                                   placeholder="Pilih sales person"/>
+                            
                             <field name="price_tier" 
                                    required="1"
                                    readonly="state != 'draft'"/>
+                            
                             <field name="discount_percent" 
                                    readonly="state != 'draft'"/>
+                            
                             <field name="currency_id" invisible="1"/>
                         </group>
                     </group>
                     
+                    <!-- Notebook Tabs -->
                     <notebook>
-                        <page string="Invoice Lines" name="invoice_lines">
+                        <!-- Tab: Invoice Lines -->
+                        <page string="Detail Produk" name="invoice_lines">
                             <field name="invoice_line_ids" 
                                    readonly="state != 'draft'">
                                 <tree editable="bottom">
                                     <field name="sequence" widget="handle"/>
                                     <field name="product_id" 
                                            domain="[('sale_ok', '=', True)]"
-                                           required="1"/>
-                                    <field name="description"/>
+                                           required="1"
+                                           placeholder="Pilih produk"/>
+                                    <field name="description" placeholder="Deskripsi produk (opsional)"/>
                                     <field name="quantity" required="1"/>
                                     <field name="price_unit" widget="monetary" required="1"/>
                                     <field name="subtotal" widget="monetary" readonly="1"/>
                                     <field name="currency_id" column_invisible="1"/>
                                 </tree>
                             </field>
+                            
+                            <!-- Footer: Totals -->
                             <group class="oe_subtotal_footer oe_right">
                                 <field name="subtotal" widget="monetary"/>
                                 <field name="discount_amount" widget="monetary"/>
@@ -162,22 +230,27 @@
                             </group>
                         </page>
 
-                        <!-- Payment History Tab -->
-                        <page string="Payment History" name="payment_history"
+                        <!-- Tab: Payment History -->
+                        <page string="Riwayat Pembayaran" name="payment_history"
                               invisible="state == 'draft'">
+                            
+                            <!-- Alert jika belum ada payment -->
                             <div class="alert alert-warning" role="alert"
                                  invisible="payment_count &gt; 0">
-                                <i class="fa fa-info-circle"/> No payments recorded yet. 
-                                <button name="action_add_payment" string="Record Payment" 
-                                        type="object" class="btn-link"
+                                <i class="fa fa-info-circle"/> Belum ada pembayaran tercatat.
+                                <button name="action_add_payment" 
+                                        string="Catat Pembayaran" 
+                                        type="object" 
+                                        class="btn-link"
                                         invisible="state not in ['confirmed', 'partial', 'overdue']"/>
                             </div>
                             
+                            <!-- List Payments -->
                             <field name="payment_ids" readonly="1">
                                 <tree decoration-muted="state == 'cancelled'">
                                     <field name="name"/>
                                     <field name="payment_date"/>
-                                    <field name="amount" widget="monetary" sum="Total Paid"/>
+                                    <field name="amount" widget="monetary" sum="Total Dibayar"/>
                                     <field name="payment_method"/>
                                     <field name="note"/>
                                     <field name="recorded_by"/>
@@ -188,7 +261,8 @@
                             </field>
                         </page>
                         
-                        <page string="Commission" name="commission" 
+                        <!-- Tab: Commission -->
+                        <page string="Komisi Sales" name="commission" 
                               invisible="state == 'draft'">
                             <field name="commission_ids" readonly="1">
                                 <tree>
@@ -197,25 +271,31 @@
                                     <field name="cost_price" widget="monetary"/>
                                     <field name="selling_price" widget="monetary"/>
                                     <field name="margin" widget="monetary"/>
-                                    <field name="commission_amount" widget="monetary"/>
+                                    <field name="commission_amount" widget="monetary" sum="Total Komisi"/>
                                     <field name="state" widget="badge"/>
                                 </tree>
                             </field>
+                            
+                            <!-- Footer: Total Commission -->
                             <group class="oe_subtotal_footer oe_right">
                                 <field name="total_commission" widget="monetary" 
                                        class="oe_subtotal_footer_separator"/>
                             </group>
                         </page>
                         
-                        <page string="Other Info" name="other_info">
+                        <!-- Tab: Other Info -->
+                        <page string="Info Lainnya" name="other_info">
                             <group>
                                 <field name="sale_order_id" readonly="1"/>
-                                <field name="notes" placeholder="Internal notes..."/>
+                                <field name="notes" 
+                                       placeholder="Catatan internal untuk invoice ini..."/>
                                 <field name="company_id" invisible="1"/>
                             </group>
                         </page>
                     </notebook>
                 </sheet>
+                
+                <!-- Chatter -->
                 <div class="oe_chatter">
                     <field name="message_follower_ids"/>
                     <field name="activity_ids"/>
@@ -225,64 +305,99 @@
         </field>
     </record>
 
-    <!-- Invoice Search View -->
+    <!-- Search View -->
     <record id="view_twh_invoice_search" model="ir.ui.view">
         <field name="name">twh.invoice.search</field>
         <field name="model">twh.invoice</field>
         <field name="arch" type="xml">
-            <search string="Search Invoices">
-                <field name="name" string="Invoice Number"/>
+            <search string="Cari Invoice">
+                <!-- Search Fields -->
+                <field name="name" string="Nomor Invoice"/>
                 <field name="partner_id" string="Customer"/>
                 <field name="sales_person_id" string="Sales Person"/>
+                
                 <separator/>
-                <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
-                <filter string="Confirmed" name="confirmed" domain="[('state', '=', 'confirmed')]"/>
-                <filter string="Partial Payment" name="partial" domain="[('state', '=', 'partial')]"/>
-                <filter string="Paid" name="paid" domain="[('state', '=', 'paid')]"/>
-                <filter string="Overdue" name="overdue" domain="[('state', '=', 'overdue')]"/>
+                
+                <!-- Filter by State -->
+                <filter string="Draft" name="draft" 
+                        domain="[('state', '=', 'draft')]"/>
+                <filter string="Dikonfirmasi" name="confirmed" 
+                        domain="[('state', '=', 'confirmed')]"/>
+                <filter string="Dibayar Sebagian" name="partial" 
+                        domain="[('state', '=', 'partial')]"/>
+                <filter string="Lunas" name="paid" 
+                        domain="[('state', '=', 'paid')]"/>
+                <filter string="Terlambat" name="overdue" 
+                        domain="[('state', '=', 'overdue')]"/>
+                
                 <separator/>
-                <filter string="Cash" name="cash" domain="[('payment_type', '=', 'cash')]"/>
-                <filter string="Tempo" name="tempo" domain="[('payment_type', '=', 'tempo')]"/>
+                
+                <!-- Filter by Payment Type -->
+                <filter string="Cash" name="cash" 
+                        domain="[('payment_type', '=', 'cash')]"/>
+                <filter string="Tempo" name="tempo" 
+                        domain="[('payment_type', '=', 'tempo')]"/>
+                
                 <separator/>
-                <filter string="Unpaid (Tempo)" name="unpaid_tempo" 
+                
+                <!-- Custom Filters -->
+                <filter string="Belum Lunas (Tempo)" name="unpaid_tempo" 
                         domain="[('payment_type', '=', 'tempo'), ('state', 'in', ['confirmed', 'partial', 'overdue'])]"/>
+                
                 <separator/>
-                <filter string="My Invoices" name="my_invoices" 
+                
+                <!-- My Records -->
+                <filter string="Invoice Saya" name="my_invoices" 
                         domain="[('sales_person_id', '=', uid)]"/>
+                
                 <separator/>
-                <filter string="This Month" name="this_month" 
+                
+                <!-- Date Filter -->
+                <filter string="Bulan Ini" name="this_month" 
                         domain="[('date_invoice', '&gt;=', (context_today() - relativedelta(day=1)).strftime('%Y-%m-%d')),
                                  ('date_invoice', '&lt;=', (context_today() + relativedelta(day=31)).strftime('%Y-%m-%d'))]"/>
-                <group expand="0" string="Group By">
-                    <filter string="Customer" name="group_partner" context="{'group_by': 'partner_id'}"/>
-                    <filter string="Payment Type" name="group_payment_type" context="{'group_by': 'payment_type'}"/>
-                    <filter string="Sales Person" name="group_sales" context="{'group_by': 'sales_person_id'}"/>
-                    <filter string="State" name="group_state" context="{'group_by': 'state'}"/>
-                    <filter string="Invoice Date" name="group_date" context="{'group_by': 'date_invoice'}"/>
+                
+                <!-- Group By -->
+                <group expand="0" string="Kelompokkan Berdasarkan">
+                    <filter string="Customer" name="group_partner" 
+                            context="{'group_by': 'partner_id'}"/>
+                    <filter string="Tipe Pembayaran" name="group_payment_type" 
+                            context="{'group_by': 'payment_type'}"/>
+                    <filter string="Sales Person" name="group_sales" 
+                            context="{'group_by': 'sales_person_id'}"/>
+                    <filter string="Status" name="group_state" 
+                            context="{'group_by': 'state'}"/>
+                    <filter string="Tanggal Invoice" name="group_date" 
+                            context="{'group_by': 'date_invoice'}"/>
                 </group>
             </search>
         </field>
     </record>
 
-    <!-- Invoice Action -->
+    <!-- Action -->
     <record id="action_twh_invoice" model="ir.actions.act_window">
-        <field name="name">TWH Invoices</field>
+        <field name="name">Invoice TWH</field>
         <field name="res_model">twh.invoice</field>
         <field name="view_mode">tree,form</field>
         <field name="context">{'search_default_confirmed': 1}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
-                Create your first TWH Invoice
+                Buat Invoice TWH Pertama Anda
             </p>
             <p>
-                Create invoices with flexible payment options: Cash (immediate payment) or Tempo (payment terms).
+                Buat invoice dengan pilihan pembayaran Cash (langsung lunas) 
+                atau Tempo (bayar kemudian dengan jatuh tempo).
             </p>
         </field>
     </record>
 
-    <!-- Sequence for Invoice Number -->
+    <!-- ========================================
+         SEQUENCES
+         ======================================== -->
+
+    <!-- Sequence: Invoice Number -->
     <record id="seq_twh_invoice" model="ir.sequence">
-        <field name="name">TWH Invoice Sequence</field>
+        <field name="name">Nomor Invoice TWH</field>
         <field name="code">twh.invoice</field>
         <field name="prefix">TWH/INV/%(year)s/</field>
         <field name="padding">5</field>
@@ -290,9 +405,9 @@
         <field name="number_next">1</field>
     </record>
 
-    <!-- Sequence for Payment Number -->
+    <!-- Sequence: Payment Number -->
     <record id="seq_twh_payment" model="ir.sequence">
-        <field name="name">TWH Payment Sequence</field>
+        <field name="name">Nomor Pembayaran TWH</field>
         <field name="code">twh.payment</field>
         <field name="prefix">TWH/PAY/%(year)s/</field>
         <field name="padding">5</field>

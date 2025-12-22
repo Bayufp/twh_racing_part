@@ -1,10 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
+    
+    <!-- ========================================
+         TWH DASHBOARD TEMPLATE
+         Template OWL untuk dashboard component
+         ======================================== -->
+    
     <t t-name="twh_racing_part.Dashboard">
         <div class="twh_dashboard_container">
+            
             <!-- Header -->
             <div class="d-flex justify-content-between align-items-center mb-4 p-4">
-                <h1 class="mb-0 text-dark font-weight-bold">TWH Racing Part - Dashboard</h1>
+                <h1 class="mb-0 text-dark font-weight-bold">Dashboard TWH Racing Part</h1>
                 <button class="btn btn-primary btn-sm" t-on-click="refreshDashboard">
                     <i class="fa fa-refresh"/> Refresh
                 </button>
@@ -12,12 +19,13 @@
 
             <!-- Statistics Cards -->
             <div class="row mx-3 mb-4">
-                <!-- Card 1 - Total Products -->
+                
+                <!-- Card 1: Total Products -->
                 <div class="col-12 col-md-6 col-lg-3 mb-3">
                     <div class="twh-stat-card twh-card-purple">
                         <div class="twh-stat-content">
                             <div class="twh-stat-info">
-                                <h6 class="twh-stat-label">TOTAL PRODUCTS</h6>
+                                <h6 class="twh-stat-label">TOTAL PRODUK</h6>
                                 <h2 class="twh-stat-value"><t t-esc="state.total_products or 0"/></h2>
                             </div>
                             <div class="twh-stat-icon">
@@ -27,12 +35,12 @@
                     </div>
                 </div>
                 
-                <!-- Card 2 - Total Customers -->
+                <!-- Card 2: Total Customers -->
                 <div class="col-12 col-md-6 col-lg-3 mb-3">
                     <div class="twh-stat-card twh-card-pink">
                         <div class="twh-stat-content">
                             <div class="twh-stat-info">
-                                <h6 class="twh-stat-label">TOTAL CUSTOMERS</h6>
+                                <h6 class="twh-stat-label">TOTAL CUSTOMER</h6>
                                 <h2 class="twh-stat-value"><t t-esc="state.total_customers or 0"/></h2>
                             </div>
                             <div class="twh-stat-icon">
@@ -42,22 +50,22 @@
                     </div>
                 </div>
                 
-                <!-- Card 3 - Unpaid Invoices -->
+                <!-- Card 3: Unpaid Invoices -->
                 <div class="col-12 col-md-6 col-lg-3 mb-3">
                     <div class="twh-stat-card twh-card-blue">
                         <div class="twh-stat-content">
                             <div class="twh-stat-info">
-                                <h6 class="twh-stat-label">UNPAID INVOICES</h6>
+                                <h6 class="twh-stat-label">INVOICE BELUM LUNAS</h6>
                                 <h2 class="twh-stat-value"><t t-esc="state.unpaid_invoices or 0"/></h2>
                                 <p class="twh-stat-subtitle">
-                                    Outstanding: <t t-esc="state.total_outstanding or 'Rp 0'"/>
+                                    Piutang: <t t-esc="state.total_outstanding or 'Rp 0'"/>
                                 </p>
                                 <p class="twh-stat-subtitle" style="font-size: 11px; margin-top: -5px;">
                                     <span t-if="state.overdue_count > 0" class="text-danger">
-                                        <i class="fa fa-exclamation-triangle"/> <t t-esc="state.overdue_count"/> Overdue
+                                        <i class="fa fa-exclamation-triangle"/> <t t-esc="state.overdue_count"/> Terlambat
                                     </span>
                                     <span t-if="state.partial_count > 0" style="margin-left: 8px;" class="text-warning">
-                                        <i class="fa fa-clock-o"/> <t t-esc="state.partial_count"/> Partial
+                                        <i class="fa fa-clock-o"/> <t t-esc="state.partial_count"/> Cicilan
                                     </span>
                                 </p>
                             </div>
@@ -68,28 +76,31 @@
                     </div>
                 </div>
 
-                <!-- Card 4 - Total Revenue -->
+                <!-- Card 4: Total Revenue -->
                 <div class="col-12 col-md-6 col-lg-3 mb-3">
                     <div class="twh-stat-card twh-card-cyan">
                         <div class="twh-stat-content">
                             <div class="twh-stat-info">
+                                <!-- Header dengan Filter Dropdown -->
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <h6 class="twh-stat-label mb-0">TOTAL REVENUE</h6>
+                                    
                                     <!-- Period Filter Dropdown -->
                                     <select class="twh-period-filter" t-on-change="onRevenuePeriodChange">
-                                        <option value="month" t-att-selected="state.revenue_period === 'month'">This Month</option>
-                                        <option value="year" t-att-selected="state.revenue_period === 'year'">This Year</option>
-                                        <option value="all" t-att-selected="state.revenue_period === 'all'">All Time</option>
+                                        <option value="month" t-att-selected="state.revenue_period === 'month'">Bulan Ini</option>
+                                        <option value="year" t-att-selected="state.revenue_period === 'year'">Tahun Ini</option>
+                                        <option value="all" t-att-selected="state.revenue_period === 'all'">Semua Waktu</option>
                                     </select>
                                 </div>
+                                
                                 <h2 class="twh-stat-value twh-stat-revenue"><t t-esc="state.total_revenue or 'Rp 0'"/></h2>
                                 <p class="twh-stat-subtitle">
                                     <i class="fa fa-calendar"/> <t t-esc="state.revenue_period_label"/>
                                 </p>
                                 <p class="twh-stat-subtitle" style="font-size: 11px; margin-top: -5px;">
-                                    <i class="fa fa-money"/> <t t-esc="state.revenue_payment_count"/> payments 
+                                    <i class="fa fa-money"/> <t t-esc="state.revenue_payment_count"/> pembayaran
                                     <span style="margin: 0 4px;">•</span>
-                                    <t t-esc="state.revenue_invoice_count"/> invoices
+                                    <t t-esc="state.revenue_invoice_count"/> invoice
                                 </p>
                             </div>
                             <div class="twh-stat-icon">
@@ -107,20 +118,25 @@
                         <div class="card-header bg-white border-0 pt-3">
                             <h5 class="mb-0">
                                 <i class="fa fa-line-chart text-primary me-2"/>
-                                Monthly Sales Trend
+                                Tren Penjualan Bulanan
                             </h5>
-                            <small class="text-muted">Total penjualan (invoice created) 6 bulan terakhir</small>
+                            <small class="text-muted">Total penjualan (invoice dibuat) 6 bulan terakhir</small>
                         </div>
                         <div class="card-body">
+                            <!-- Empty State -->
                             <div t-if="state.monthly_sales.length === 0" class="text-center py-5 text-muted">
                                 <i class="fa fa-info-circle fa-3x mb-3"/>
                                 <p>Belum ada invoice. Mulai buat invoice untuk melihat grafik penjualan.</p>
                             </div>
+                            
+                            <!-- Chart Container -->
                             <div t-else="" id="monthly_sales" style="min-height: 350px;"/>
                         </div>
                     </div>
                 </div>
             </div>
+            
         </div>
     </t>
+    
 </templates>

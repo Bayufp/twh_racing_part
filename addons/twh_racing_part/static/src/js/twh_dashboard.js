@@ -4,6 +4,14 @@ import { Component, onMounted, useState } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 
+/**
+ * Component Dashboard TWH Racing Part
+ *
+ * Component ini menampilkan dashboard dengan:
+ * - Statistik summary (produk, customer, piutang, revenue)
+ * - Grafik penjualan bulanan (6 bulan terakhir)
+ * - Filter periode untuk revenue
+ */
 export class TwhDashboard extends Component {
   static template = "twh_racing_part.Dashboard";
   static props = {
@@ -13,31 +21,45 @@ export class TwhDashboard extends Component {
   };
 
   setup() {
+    // Setup services
     this.orm = useService("orm");
     this.rpc = useService("rpc");
+
+    // State management
     this.state = useState({
+      // Summary Statistics
       total_products: 0,
       total_customers: 0,
       unpaid_invoices: 0,
       total_outstanding: "Rp 0",
       overdue_count: 0,
       partial_count: 0,
+
+      // Revenue Data
       total_revenue: "Rp 0",
       revenue_period: "month",
-      revenue_period_label: "This Month",
+      revenue_period_label: "Bulan Ini",
       revenue_payment_count: 0,
       revenue_invoice_count: 0,
+
+      // Sales Chart Data
       monthly_sales: [],
     });
 
+    // Load data saat component mounted
     onMounted(() => {
       this.loadDashboardData();
     });
   }
 
+  /**
+   * Load semua data dashboard dari backend
+   *
+   * @param {string} revenuePeriod - Periode revenue ('month', 'year', 'all')
+   */
   async loadDashboardData(revenuePeriod = "month") {
     try {
-      // Call dashboard summary dengan revenue period
+      // Panggil method backend untuk ambil summary
       const summary = await this.orm.call(
         "twh.dashboard",
         "get_dashboard_summary",
@@ -45,62 +67,91 @@ export class TwhDashboard extends Component {
       );
 
       // Update state dengan data dari backend
-      this.state.total_products = summary.total_products || 0;
-      this.state.total_customers = summary.total_customers || 0;
-      this.state.unpaid_invoices = summary.unpaid_invoices || 0;
-      this.state.total_outstanding = summary.total_outstanding || "Rp 0";
-      this.state.overdue_count = summary.overdue_count || 0;
-      this.state.partial_count = summary.partial_count || 0;
-      this.state.total_revenue = summary.total_revenue || "Rp 0";
-      this.state.revenue_period = summary.revenue_period || "month";
-      this.state.revenue_period_label =
-        summary.revenue_period_label || "This Month";
-      this.state.revenue_payment_count = summary.revenue_payment_count || 0;
-      this.state.revenue_invoice_count = summary.revenue_invoice_count || 0;
-      this.state.monthly_sales = summary.monthly_sales || [];
+      this.updateStateFromSummary(summary);
 
       // Render chart setelah DOM ready
-      setTimeout(() => this.renderCharts(), 100);
+      setTimeout(() => this.renderSalesChart(), 100);
 
-      console.log("✅ Dashboard loaded:", {
+      console.log("Dashboard berhasil dimuat:", {
         revenue: this.state.total_revenue,
         period: this.state.revenue_period_label,
-        payments: this.state.revenue_payment_count,
-        invoices: this.state.revenue_invoice_count,
         unpaid: this.state.unpaid_invoices,
-        outstanding: this.state.total_outstanding,
       });
     } catch (error) {
-      console.error("Failed to load dashboard data:", error);
+      console.error("Gagal memuat data dashboard:", error);
     }
   }
 
-  // Handle Revenue Period Change
+  /**
+   * Update state component dari data summary backend
+   *
+   * @param {Object} summary - Data summary dari backend
+   */
+  updateStateFromSummary(summary) {
+    this.state.total_products = summary.total_products || 0;
+    this.state.total_customers = summary.total_customers || 0;
+    this.state.unpaid_invoices = summary.unpaid_invoices || 0;
+    this.state.total_outstanding = summary.total_outstanding || "Rp 0";
+    this.state.overdue_count = summary.overdue_count || 0;
+    this.state.partial_count = summary.partial_count || 0;
+    this.state.total_revenue = summary.total_revenue || "Rp 0";
+    this.state.revenue_period = summary.revenue_period || "month";
+    this.state.revenue_period_label =
+      summary.revenue_period_label || "Bulan Ini";
+    this.state.revenue_payment_count = summary.revenue_payment_count || 0;
+    this.state.revenue_invoice_count = summary.revenue_invoice_count || 0;
+    this.state.monthly_sales = summary.monthly_sales || [];
+  }
+
+  /**
+   * Handler untuk perubahan periode revenue
+   *
+   * @param {Event} event - Change event dari dropdown
+   */
   async onRevenuePeriodChange(event) {
     const newPeriod = event.target.value;
-    console.log("📅 Changing revenue period to:", newPeriod);
+    console.log("Mengubah periode revenue ke:", newPeriod);
     await this.loadDashboardData(newPeriod);
   }
 
-  renderCharts() {
+  /**
+   * Render grafik penjualan menggunakan ApexCharts
+   */
+  renderSalesChart() {
+    // Validasi library ApexCharts sudah loaded
     if (typeof ApexCharts === "undefined") {
-      console.error("ApexCharts library not loaded");
+      console.error("Library ApexCharts belum dimuat");
       return;
     }
 
+    // Ambil element chart
     const chartElement = document.querySelector("#monthly_sales");
     if (!chartElement) {
-      console.error("Chart element #monthly_sales not found");
+      console.error("Element chart #monthly_sales tidak ditemukan");
       return;
     }
 
-    // Clear existing chart
+    // Clear chart yang sudah ada
     chartElement.innerHTML = "";
 
-    const options = {
+    // Konfigurasi chart
+    const options = this.getChartOptions();
+
+    // Render chart
+    const chart = new ApexCharts(chartElement, options);
+    chart.render();
+  }
+
+  /**
+   * Get konfigurasi chart ApexCharts
+   *
+   * @returns {Object} - Konfigurasi chart
+   */
+  getChartOptions() {
+    return {
       series: [
         {
-          name: "Total Sales (Invoices Created)", // ← CHANGED
+          name: "Total Penjualan (Invoice Dibuat)",
           data: this.state.monthly_sales.map((item) => item.amount),
         },
       ],
@@ -157,15 +208,16 @@ export class TwhDashboard extends Component {
         borderColor: "#f1f1f1",
       },
     };
-
-    const chart = new ApexCharts(chartElement, options);
-    chart.render();
   }
 
-  // Method untuk refresh data
+  /**
+   * Method untuk refresh dashboard
+   * Dipanggil saat user klik button Refresh
+   */
   async refreshDashboard() {
     await this.loadDashboardData(this.state.revenue_period);
   }
 }
 
+// Register component ke Odoo registry
 registry.category("actions").add("twh_dashboard", TwhDashboard);

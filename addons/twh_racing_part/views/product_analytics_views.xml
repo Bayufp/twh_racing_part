@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- Analytics Wizard Form View -->
+    <!-- ========================================
+         PRODUCT ANALYTICS WIZARD VIEWS
+         ======================================== -->
+
+    <!-- Wizard Form View -->
     <record id="view_twh_analytics_wizard_form" model="ir.ui.view">
         <field name="name">twh.analytics.wizard.form</field>
         <field name="model">twh.analytics.wizard</field>
         <field name="arch" type="xml">
-            <form string="Product Analytics">
+            <form string="Analitik Produk">
                 <group>
                     <group>
                         <field name="period_type" required="1"/>
@@ -14,57 +18,85 @@
                         <field name="top_n" required="1"/>
                     </group>
                     <group invisible="period_type != 'custom'">
-                        <field name="date_from" required="period_type == 'custom'"/>
-                        <field name="date_to" required="period_type == 'custom'"/>
+                        <field name="date_from" 
+                               required="period_type == 'custom'"/>
+                        <field name="date_to" 
+                               required="period_type == 'custom'"/>
                     </group>
                 </group>
-                <group string="Date Range" invisible="period_type == 'custom'">
+                
+                <!-- Summary Date Range -->
+                <group string="Periode Tanggal" 
+                       invisible="period_type == 'custom'">
                     <field name="date_from" readonly="1"/>
                     <field name="date_to" readonly="1"/>
                 </group>
+                
                 <footer>
-                    <button string="View Analytics" name="action_view_analytics" 
-                            type="object" class="oe_highlight"/>
-                    <button string="Export Excel" name="action_export_excel" 
+                    <!-- Button: View Analytics -->
+                    <button string="Lihat Analitik" 
+                            name="action_view_analytics" 
+                            type="object" 
+                            class="oe_highlight"/>
+                    
+                    <!-- Button: Export Excel -->
+                    <button string="Export Excel" 
+                            name="action_export_excel" 
                             type="object"/>
-                    <button string="Cancel" special="cancel"/>
+                    
+                    <!-- Button: Cancel -->
+                    <button string="Batal" special="cancel"/>
                 </footer>
             </form>
         </field>
     </record>
 
-    <!-- Analytics Wizard Action -->
+    <!-- Wizard Action -->
     <record id="action_twh_analytics_wizard" model="ir.actions.act_window">
-        <field name="name">Product Analytics</field>
+        <field name="name">Analitik Produk</field>
         <field name="res_model">twh.analytics.wizard</field>
         <field name="view_mode">form</field>
         <field name="target">new</field>
     </record>
 
-    <!-- Analytics Result Tree View -->
+    <!-- ========================================
+         ANALYTICS RESULT VIEWS
+         ======================================== -->
+
+    <!-- Result Tree View -->
     <record id="view_twh_analytics_result_tree" model="ir.ui.view">
         <field name="name">twh.product.analytics.result.tree</field>
         <field name="model">twh.product.analytics.result</field>
         <field name="arch" type="xml">
-            <tree string="Top Products" create="false" edit="false" delete="false">
+            <tree string="Produk Terlaris" 
+                  create="false" 
+                  edit="false" 
+                  delete="false">
+                
+                <!-- Kolom Ranking -->
                 <field name="rank" widget="badge"/>
+                
+                <!-- Kolom Product Info -->
                 <field name="product_id"/>
                 <field name="product_name"/>
+                
+                <!-- Kolom Sales Data -->
                 <field name="total_quantity" sum="Total Quantity"/>
-                <field name="total_value" widget="monetary" sum="Total Value"/>
+                <field name="total_value" widget="monetary" sum="Total Nilai"/>
                 <field name="invoice_count"/>
                 <field name="avg_price" widget="monetary"/>
+                
                 <field name="currency_id" column_invisible="1"/>
             </tree>
         </field>
     </record>
 
-    <!-- Analytics Result Graph View -->
+    <!-- Result Graph View -->
     <record id="view_twh_analytics_result_graph" model="ir.ui.view">
         <field name="name">twh.product.analytics.result.graph</field>
         <field name="model">twh.product.analytics.result</field>
         <field name="arch" type="xml">
-            <graph string="Product Analytics" type="bar">
+            <graph string="Grafik Analitik Produk" type="bar">
                 <field name="product_name"/>
                 <field name="total_quantity" type="measure"/>
                 <field name="total_value" type="measure"/>
@@ -72,12 +104,12 @@
         </field>
     </record>
 
-    <!-- Analytics Result Pivot View -->
+    <!-- Result Pivot View -->
     <record id="view_twh_analytics_result_pivot" model="ir.ui.view">
         <field name="name">twh.product.analytics.result.pivot</field>
         <field name="model">twh.product.analytics.result</field>
         <field name="arch" type="xml">
-            <pivot string="Product Analysis">
+            <pivot string="Analisis Produk">
                 <field name="product_name" type="row"/>
                 <field name="total_quantity" type="measure"/>
                 <field name="total_value" type="measure"/>
@@ -85,10 +117,4 @@
         </field>
     </record>
 
-    <!-- Dashboard Action -->
-    <record id="action_twh_dashboard" model="ir.actions.client">
-        <field name="name">TWH Dashboard</field>
-        <field name="tag">twh_dashboard</field>
-    </record>
-
-</odoo>
+</odoo> 

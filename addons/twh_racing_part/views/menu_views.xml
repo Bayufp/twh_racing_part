@@ -1,107 +1,138 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     
-    <!-- Main Menu -->
+    <!-- ========================================
+         MENU STRUCTURE TWH RACING PART
+         ======================================== -->
+
+    <!-- Root Menu -->
     <menuitem id="menu_twh_root"
               name="TWH Racing Part"
               sequence="5"
               web_icon="twh_racing_part,static/description/icon.png"/>
 
-    <!-- Operations -->
+    <!-- ========================================
+         OPERATIONS MENU
+         ======================================== -->
+    
     <menuitem id="menu_twh_operations"
-              name="Operations"
+              name="Operasional"
               parent="menu_twh_root"
               sequence="10"/>
 
+    <!-- Sub Menu: Invoices -->
     <menuitem id="menu_twh_invoice"
-              name="Invoices"
+              name="Invoice"
               parent="menu_twh_operations"
               action="action_twh_invoice"
               sequence="10"/>
 
+    <!-- Sub Menu: Payment Records -->
     <menuitem id="menu_twh_payment"
-              name="Payment Records"
+              name="Catatan Pembayaran"
               parent="menu_twh_operations"
               action="action_twh_payment"
               sequence="15"/>
 
+    <!-- Sub Menu: Products -->
     <menuitem id="menu_twh_products"
-              name="Products"
+              name="Produk"
               parent="menu_twh_operations"
               action="product.product_normal_action_sell"
               sequence="20"/>
 
+    <!-- Sub Menu: Customers -->
     <menuitem id="menu_twh_customers"
-              name="Customers"
+              name="Customer"
               parent="menu_twh_operations"
               action="base.action_partner_form"
               sequence="30"/>
 
-    <!-- Sales Management -->
+    <!-- ========================================
+         SALES MANAGEMENT MENU
+         ======================================== -->
+    
     <menuitem id="menu_twh_sales"
-              name="Sales Management"
+              name="Manajemen Sales"
               parent="menu_twh_root"
               sequence="20"/>
 
+    <!-- Sub Menu: Sales Commission -->
     <menuitem id="menu_twh_commission"
-              name="Sales Commission"
+              name="Komisi Sales"
               parent="menu_twh_sales"
               action="action_twh_sales_commission"
               sequence="10"/>
 
+    <!-- Sub Menu: Commission Reports -->
     <menuitem id="menu_twh_commission_report"
-              name="Commission Reports"
+              name="Laporan Komisi"
               parent="menu_twh_sales"
               action="action_twh_commission_wizard"
               sequence="20"/>
 
-    <!-- Due Reminders (CHANGED - now points to invoice tracking) -->
+    <!-- ========================================
+         DUE REMINDERS MENU
+         Menu khusus untuk tracking invoice jatuh tempo
+         ======================================== -->
+    
     <menuitem id="menu_twh_reminders"
-              name="Due Reminders"
+              name="Reminder Jatuh Tempo"
               parent="menu_twh_root"
               action="action_twh_invoice_due_tracking"
               sequence="30"/>
 
-    <!-- Analytics -->
+    <!-- ========================================
+         ANALYTICS MENU
+         ======================================== -->
+    
     <menuitem id="menu_twh_analytics"
-              name="Analytics"
+              name="Analitik"
               parent="menu_twh_root"
               sequence="40"/>
 
+    <!-- Sub Menu: Dashboard -->
     <menuitem id="menu_twh_dashboard"
               name="Dashboard"
               parent="menu_twh_analytics"
               action="action_twh_dashboard"
               sequence="10"/>
 
+    <!-- Sub Menu: Product Analytics -->
     <menuitem id="menu_twh_product_analytics"
-              name="Product Analytics"
+              name="Analitik Produk"
               parent="menu_twh_analytics"
               action="action_twh_analytics_wizard"
               sequence="20"/>
 
-    <!-- Configuration -->
+    <!-- ========================================
+         CONFIGURATION MENU
+         Menu ini hanya visible untuk Manager
+         ======================================== -->
+    
     <menuitem id="menu_twh_configuration"
-              name="Configuration"
+              name="Konfigurasi"
               parent="menu_twh_root"
               sequence="90"
               groups="group_twh_manager"/>
 
+    <!-- Sub Menu: Price Tiers -->
     <menuitem id="menu_twh_price_tiers"
-              name="Price Tiers"
+              name="Kategori Harga"
               parent="menu_twh_configuration"
               action="action_twh_price_tier"
               sequence="10"/>
 
+    <!-- Sub Menu: Product Prices -->
     <menuitem id="menu_twh_product_prices"
-              name="Product Prices"
+              name="Harga Produk"
               parent="menu_twh_configuration"
               action="action_twh_product_price"
               sequence="20"/>
     
-    <!-- Reminder History (hidden, only accessible via search) -->
+    <!-- Sub Menu: Reminder History (Hidden, only via search) -->
     <menuitem id="menu_twh_reminder_history"
-              name="Reminder History"
+              name="Riwayat Reminder"
               parent="menu_twh_configuration"
               action="action_twh_due_reminder"
               sequence="30"

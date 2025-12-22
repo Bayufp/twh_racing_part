@@ -1,63 +1,83 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
-    <!-- Action -->
-    <record id="action_twh_due_reminder" model="ir.actions.act_window">
-        <field name="name">Due Reminders</field>
-        <field name="res_model">twh.due.reminder</field>
-        <field name="view_mode">tree,form</field>
-        <field name="context">{}</field>
-        <field name="domain">[]</field>
-    </record>
 
-    <!-- Tree View (UPDATED) -->
+    <!-- ========================================
+         TWH DUE REMINDER VIEWS
+         ======================================== -->
+
+    <!-- Tree View -->
     <record id="view_twh_due_reminder_tree" model="ir.ui.view">
         <field name="name">twh.due.reminder.tree</field>
         <field name="model">twh.due.reminder</field>
         <field name="arch" type="xml">
-            <tree string="Due Reminders" decoration-danger="state == 'pending' and days_before_due &lt; 0">
+            <tree string="Reminder Jatuh Tempo" 
+                  decoration-danger="state == 'pending' and days_before_due &lt; 0">
+                
+                <!-- Kolom Invoice Info -->
                 <field name="invoice_name"/>
                 <field name="partner_id"/>
                 <field name="invoice_date"/>
                 <field name="due_date"/>
+                
+                <!-- Kolom Reminder Info -->
                 <field name="reminder_date"/>
                 <field name="days_before_due"/>
                 <field name="reminder_type"/>
+                
+                <!-- Kolom Payment Status -->
                 <field name="invoice_total" widget="monetary"/>
                 <field name="paid_amount" widget="monetary"/>
                 <field name="remaining_amount" widget="monetary"/>
                 <field name="payment_progress" widget="percentage"/>
+                
+                <!-- Kolom Status -->
                 <field name="state" widget="badge" 
                        decoration-warning="state == 'pending'"
                        decoration-success="state == 'sent'"
                        decoration-muted="state == 'dismissed'"/>
+                
                 <field name="currency_id" invisible="1"/>
             </tree>
         </field>
     </record>
 
-    <!-- Form View (UPDATED) -->
+    <!-- Form View -->
     <record id="view_twh_due_reminder_form" model="ir.ui.view">
         <field name="name">twh.due.reminder.form</field>
         <field name="model">twh.due.reminder</field>
         <field name="arch" type="xml">
-            <form string="Due Reminder">
+            <form string="Reminder Jatuh Tempo">
+                
+                <!-- Header dengan Buttons & Status -->
                 <header>
-                    <button name="action_send_reminder" string="Send Reminder" type="object"
-                            class="oe_highlight" invisible="state != 'pending'"/>
-                    <button name="action_dismiss" string="Dismiss" type="object"
+                    <!-- Button: Send Reminder -->
+                    <button name="action_send_reminder" 
+                            string="Kirim Reminder" 
+                            type="object"
+                            class="oe_highlight" 
                             invisible="state != 'pending'"/>
+                    
+                    <!-- Button: Dismiss -->
+                    <button name="action_dismiss" 
+                            string="Abaikan" 
+                            type="object"
+                            invisible="state != 'pending'"/>
+                    
+                    <!-- Status Bar -->
                     <field name="state" widget="statusbar"/>
                 </header>
+                
                 <sheet>
-                    <!-- Invoice Info -->
+                    <!-- Group: Invoice Information -->
                     <group>
-                        <group string="Invoice Information">
+                        <group string="Informasi Invoice">
                             <field name="invoice_id"/>
                             <field name="partner_id" readonly="1"/>
                             <field name="invoice_date" readonly="1"/>
                             <field name="due_date" readonly="1"/>
                         </group>
-                        <group string="Payment Status">
+                        
+                        <group string="Status Pembayaran">
                             <field name="invoice_total" widget="monetary" readonly="1"/>
                             <field name="paid_amount" widget="monetary" readonly="1"/>
                             <field name="remaining_amount" widget="monetary" readonly="1"/>
@@ -66,53 +86,89 @@
                         </group>
                     </group>
                     
-                    <!-- Reminder Info -->
+                    <!-- Group: Reminder Details -->
                     <group>
-                        <group string="Reminder Details">
+                        <group string="Detail Reminder">
                             <field name="reminder_date"/>
                             <field name="days_before_due"/>
                             <field name="reminder_type"/>
                         </group>
-                        <group string="Status">
+                        
+                        <group string="Status Pengiriman">
                             <field name="sent_date" readonly="1"/>
                             <field name="sent_by_id" readonly="1"/>
                         </group>
                     </group>
                     
-                    <!-- Message -->
-                    <group string="Reminder Message">
+                    <!-- Group: Reminder Message -->
+                    <group string="Pesan Reminder">
                         <field name="message" readonly="1" nolabel="1" widget="text"/>
                     </group>
                     
-                    <!-- Notes -->
-                    <group string="Notes">
-                        <field name="notes" nolabel="1" placeholder="Add internal notes..."/>
+                    <!-- Group: Internal Notes -->
+                    <group string="Catatan Internal">
+                        <field name="notes" nolabel="1" 
+                               placeholder="Tambahkan catatan internal di sini..."/>
                     </group>
                 </sheet>
             </form>
         </field>
     </record>
 
-    <!-- Search View (NEW) -->
+    <!-- Search View -->
     <record id="view_twh_due_reminder_search" model="ir.ui.view">
         <field name="name">twh.due.reminder.search</field>
         <field name="model">twh.due.reminder</field>
         <field name="arch" type="xml">
-            <search string="Search Due Reminders">
+            <search string="Cari Reminder">
+                <!-- Search Fields -->
                 <field name="invoice_name"/>
                 <field name="partner_id"/>
+                
                 <separator/>
-                <filter string="Pending" name="pending" domain="[('state', '=', 'pending')]"/>
-                <filter string="Sent" name="sent" domain="[('state', '=', 'sent')]"/>
-                <filter string="Overdue" name="overdue" domain="[('days_before_due', '&lt;', 0)]"/>
+                
+                <!-- Filter by State -->
+                <filter string="Pending" name="pending" 
+                        domain="[('state', '=', 'pending')]"/>
+                <filter string="Sudah Dikirim" name="sent" 
+                        domain="[('state', '=', 'sent')]"/>
+                <filter string="Terlambat" name="overdue" 
+                        domain="[('days_before_due', '&lt;', 0)]"/>
+                
                 <separator/>
-                <filter string="Today" name="today" domain="[('reminder_date', '=', context_today().strftime('%Y-%m-%d'))]"/>
-                <group expand="0" string="Group By">
-                    <filter string="Customer" name="group_partner" context="{'group_by': 'partner_id'}"/>
-                    <filter string="Reminder Type" name="group_type" context="{'group_by': 'reminder_type'}"/>
-                    <filter string="State" name="group_state" context="{'group_by': 'state'}"/>
+                
+                <!-- Date Filters -->
+                <filter string="Hari Ini" name="today" 
+                        domain="[('reminder_date', '=', context_today().strftime('%Y-%m-%d'))]"/>
+                
+                <!-- Group By -->
+                <group expand="0" string="Kelompokkan Berdasarkan">
+                    <filter string="Customer" name="group_partner" 
+                            context="{'group_by': 'partner_id'}"/>
+                    <filter string="Tipe Reminder" name="group_type" 
+                            context="{'group_by': 'reminder_type'}"/>
+                    <filter string="Status" name="group_state" 
+                            context="{'group_by': 'state'}"/>
                 </group>
             </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_twh_due_reminder" model="ir.actions.act_window">
+        <field name="name">Reminder Jatuh Tempo</field>
+        <field name="res_model">twh.due.reminder</field>
+        <field name="view_mode">tree,form</field>
+        <field name="context">{}</field>
+        <field name="domain">[]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Belum Ada Reminder
+            </p>
+            <p>
+                Reminder akan dibuat otomatis oleh sistem untuk invoice tempo 
+                yang akan jatuh tempo atau sudah terlambat.
+            </p>
         </field>
     </record>
 
